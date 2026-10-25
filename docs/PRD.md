@@ -171,7 +171,7 @@ Status as of this document. "Real" means it runs in this repository today. The d
 | Local model (`LocalModelAdapter`) | | Stub. Raises `NotImplementedError`. The manifest holds a placeholder, not a pinned model |
 | Model output format with `quote[]` and `msg[]` | Real: the adapter, the recordings and `check_model_output` use it | |
 | Chat parser (Android and iPhone exports, text PDFs) | Real, tested | Scanned PDFs: "not supported yet" |
-| Term extractor with quote and value-versus-quote checks, flags (seven rule flags), needs_review | Real, tested. Shown on `/dashboard/terms` | Runs on recorded model output (demo). Not clicked through in a browser yet |
+| Term extractor with quote and value-versus-quote checks, flags (seven rule flags), needs_review | Real, tested. Shown on `/dashboard/terms`, checked in a browser | Runs on recorded model output (demo) |
 | Recommendation | | Not built |
 | Recap and echo code | | Not built |
 | Voice notes | | Not built. Transcripts would be pre-recorded for the demo |

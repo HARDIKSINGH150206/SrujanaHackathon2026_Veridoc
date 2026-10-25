@@ -111,3 +111,29 @@ export async function requestTerms(
   }
   return { status: 502, body: { error: "AI_SERVICE_ERROR", message: "The analysis service could not process this chat." } };
 }
+
+export interface PlaybookView {
+  id: string;
+  title: string;
+  terms: { key: string; label: string; type: string; required: boolean }[];
+}
+
+export type PlaybooksResult = { status: number; body: { playbooks: PlaybookView[] } | { error: string; message: string } };
+
+export async function requestPlaybooks(
+  opts: { baseUrl?: string | undefined; fetchImpl?: typeof fetch } = { baseUrl: process.env.AI_SERVICE_URL }
+): Promise<PlaybooksResult> {
+  const baseUrl = "baseUrl" in opts ? opts.baseUrl : process.env.AI_SERVICE_URL;
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  if (!baseUrl) return { status: 503, body: { error: "SERVER_MISCONFIGURED", message: "AI_SERVICE_URL is not set." } };
+  let res: Response;
+  try {
+    res = await fetchImpl(`${baseUrl}/v1/playbooks`, { signal: AbortSignal.timeout(15_000) });
+  } catch {
+    return { status: 502, body: { error: "AI_SERVICE_UNAVAILABLE", message: "The analysis service could not be reached." } };
+  }
+  const body: unknown = res.ok ? await res.json().catch(() => null) : null;
+  const list = typeof body === "object" && body !== null ? (body as { playbooks?: unknown }).playbooks : undefined;
+  if (!Array.isArray(list)) return { status: 502, body: { error: "AI_SERVICE_ERROR", message: "The analysis service could not list the playbooks." } };
+  return { status: 200, body: { playbooks: list as PlaybookView[] } };
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { parseTermsRequest, requestTerms } from "./terms";
+import { parseTermsRequest, requestPlaybooks, requestTerms } from "./terms";
 
 const OK_BODY = { playbook_id: "supply-order", demo_mode: true, report: { terms: [] }, messages: [] };
 
@@ -82,5 +82,23 @@ describe("requestTerms", () => {
   it("refuses an AI service answer that is not the expected shape", async () => {
     const r = await requestTerms(req, { baseUrl: "http://ai", fetchImpl: fetchReturning(200, { nope: true }) });
     expect(r.status).toBe(502);
+  });
+});
+
+describe("requestPlaybooks", () => {
+  const LIST = { playbooks: [{ id: "supply-order", title: "Supply or order", terms: [] }] };
+
+  it("passes the list through", async () => {
+    const fetchImpl = fetchReturning(200, LIST);
+    expect(await requestPlaybooks({ baseUrl: "http://ai", fetchImpl })).toEqual({ status: 200, body: LIST });
+    expect(fetchImpl).toHaveBeenCalledWith("http://ai/v1/playbooks", expect.anything());
+  });
+
+  it("is 503 without AI_SERVICE_URL, 502 on failure or a wrong shape", async () => {
+    expect((await requestPlaybooks({ baseUrl: undefined, fetchImpl: fetchReturning(200, LIST) })).status).toBe(503);
+    expect((await requestPlaybooks({ baseUrl: "http://ai", fetchImpl: fetchReturning(500, {}) })).status).toBe(502);
+    expect((await requestPlaybooks({ baseUrl: "http://ai", fetchImpl: fetchReturning(200, { nope: 1 }) })).status).toBe(502);
+    const boom = vi.fn(async () => { throw new Error("down"); }) as unknown as typeof fetch;
+    expect((await requestPlaybooks({ baseUrl: "http://ai", fetchImpl: boom })).status).toBe(502);
   });
 });

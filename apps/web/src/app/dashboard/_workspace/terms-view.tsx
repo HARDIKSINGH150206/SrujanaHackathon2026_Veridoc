@@ -7,16 +7,10 @@
  * Shows "Demo mode: recorded model output" whenever the service says the model is fake.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiJson, ApiError } from "@/lib/client/api-client";
-import type { FlagView, TermStatus, TermView, TermsResponse } from "@/lib/terms";
+import type { FlagView, PlaybookView, TermStatus, TermView, TermsResponse } from "@/lib/terms";
 import { WorkspaceShell } from "./shell";
-
-// The two shipped playbooks (playbooks/*.json). The service rejects an unknown id.
-const PLAYBOOKS = [
-  { id: "supply-order", label: "Supply or order" },
-  { id: "freelance-job", label: "Freelance job" },
-];
 
 const STATUS_LABEL: Record<TermStatus, string> = {
   stated: "Stated",
@@ -55,6 +49,15 @@ const TERMS_CSS = `
 .tv-n { color: var(--paper-4); font-variant-numeric: tabular-nums; }
 .tv-kind { color: var(--paper-4); font-style: italic; }
 .tv-h2 { margin: 32px 0 0; font-size: 18px; font-weight: 500; }
+.tv-cell-label { display: none; }
+@media (max-width: 720px) {
+  .tv-table, .tv-table tbody, .tv-table tr, .tv-table td { display: block; width: 100%; }
+  .tv-table thead { display: none; }
+  .tv-table tr { padding: 12px 0; border-bottom: 1px solid var(--line-2); }
+  .tv-table td { border: 0; padding: 4px 0; }
+  .tv-cell-label { display: block; font-size: 12px; color: var(--paper-4); margin-bottom: 2px; }
+  .tv-msgs li { grid-template-columns: 36px minmax(0, 1fr); overflow-wrap: anywhere; }
+}
 `;
 
 function toBase64(buf: ArrayBuffer): string {
@@ -68,14 +71,19 @@ function TermRow({ t, flags }: { t: TermView; flags: FlagView[] }) {
   return (
     <tr>
       <td>
-        {t.label}
+        <strong>{t.label}</strong>
         {!t.required && <div className="tv-opt">optional</div>}
       </td>
       <td>
+        <span className="tv-cell-label">Status</span>
         <span className={`ws-chip ${STATUS_CLASS[t.status]}`}>{STATUS_LABEL[t.status]}</span>
       </td>
-      <td>{t.value ?? "–"}</td>
       <td>
+        <span className="tv-cell-label">Value</span>
+        {t.value ?? "–"}
+      </td>
+      <td>
+        <span className="tv-cell-label">Where it comes from</span>
         {t.sources.length === 0 && <span className="tv-opt">No message cited</span>}
         {t.sources.map((s, i) => (
           <div key={`${s.msg}-${i}`} style={{ marginBottom: 8 }}>
@@ -87,13 +95,6 @@ function TermRow({ t, flags }: { t: TermView; flags: FlagView[] }) {
           </div>
         ))}
         <div className="tv-src">{t.reason}</div>
-        {t.status === "needs_review" && t.problems.length > 0 && (
-          <ul className="tv-problems">
-            {t.problems.map((p) => (
-              <li key={p}>{p}</li>
-            ))}
-          </ul>
-        )}
         {flags.length > 0 && (
           <ul className="tv-problems">
             {flags.map((f) => (
@@ -109,12 +110,31 @@ function TermRow({ t, flags }: { t: TermView; flags: FlagView[] }) {
 }
 
 export function TermsView() {
-  const [playbook, setPlaybook] = useState(PLAYBOOKS[0].id);
+  const [playbooks, setPlaybooks] = useState<PlaybookView[] | null>(null);
+  const [playbook, setPlaybook] = useState("");
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TermsResponse | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    apiJson<{ playbooks: PlaybookView[] }>("/api/v1/evidence/playbooks")
+      .then((r) => {
+        if (!live) return;
+        setPlaybooks(r.playbooks);
+        setPlaybook((cur) => cur || (r.playbooks[0]?.id ?? ""));
+      })
+      .catch((err) => {
+        if (!live) return;
+        setPlaybooks([]);
+        setError(err instanceof ApiError ? err.message : "Could not load the kinds of agreement.");
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   async function analyse(e: React.FormEvent) {
     e.preventDefault();
@@ -146,10 +166,10 @@ export function TermsView() {
       <form className="tv-form" onSubmit={analyse} aria-label="Analyse a chat">
         <label>
           Kind of agreement
-          <select className="ws-input" value={playbook} onChange={(e) => setPlaybook(e.target.value)}>
-            {PLAYBOOKS.map((p) => (
+          <select className="ws-input" value={playbook} disabled={!playbooks || playbooks.length === 0} onChange={(e) => setPlaybook(e.target.value)}>
+            {(playbooks ?? []).map((p) => (
               <option key={p.id} value={p.id}>
-                {p.label}
+                {p.title}
               </option>
             ))}
           </select>
@@ -163,7 +183,7 @@ export function TermsView() {
           <textarea className="ws-input" value={text} disabled={file !== null} onChange={(e) => setText(e.target.value)} placeholder="12/03/2026, 10:02 - Name: message" />
         </label>
         <div>
-          <button type="submit" className="ws-primary" disabled={busy || (!file && text.trim() === "")}>
+          <button type="submit" className="ws-primary" disabled={busy || !playbook || (!file && text.trim() === "")}>
             {busy ? "Analysing…" : "Find terms"}
           </button>
         </div>

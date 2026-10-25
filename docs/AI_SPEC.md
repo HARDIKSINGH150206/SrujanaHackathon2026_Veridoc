@@ -207,7 +207,7 @@ No chat text, transcript or name goes into a log. Logs may hold durations, the m
 | Playbooks as JSON (`playbooks/`, `PLAYBOOK_DIR`) | Built, two playbooks |
 | Term extractor (`term_extractor.py`): quote check, sender-name rule, value-versus-quote check for amounts and dates, instruction sniffing, malformed output and adapter failure become needs_review, never an exception | Built, tested |
 | Flags (the seven above) and the status rules | Built, tested |
-| `POST /v1/terms` in the AI service, `POST /api/v1/evidence/terms` in the web app, `/dashboard/terms` page | Built. The page is typechecked but not clicked through in a browser |
+| `POST /v1/terms` and `GET /v1/playbooks` in the AI service, `POST /api/v1/evidence/terms` and `GET /api/v1/evidence/playbooks` in the web app, `/dashboard/terms` page (lists the playbooks from the service) | Built. Run in a browser (Chromium, desktop and phone width) on the supply-order sample |
 | Rules that find a term the model missed (for example the freelance advance) | Not built. The recorded miss still shows as missing |
 | Number words ("pachaas hazaar"), Hindi month names | Not built |
 | Recommendation, recap, echo code | Not built |

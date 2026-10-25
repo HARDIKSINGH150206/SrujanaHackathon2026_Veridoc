@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from .chat_import import ChatImportError, ScannedPdfNotSupported, chat_from_pdf, format_numbered, parse_chat
 from .model_adapter import adapter_from_env
-from .playbooks import PlaybookError, load_playbook
+from .playbooks import PlaybookError, list_playbooks, load_playbook
 from .settings import settings_from_env
 from .term_extractor import extract_terms
 
@@ -31,6 +31,20 @@ class TermsRequest(BaseModel):
 
 def _bad(code: str, message: str, status: int = 422) -> HTTPException:
     return HTTPException(status_code=status, detail={"code": code, "message": message})
+
+
+@router.get("/v1/playbooks")
+def playbooks() -> dict:
+    return {
+        "playbooks": [
+            {
+                "id": p.id,
+                "title": p.title,
+                "terms": [{"key": t.key, "label": t.label, "type": t.type, "required": t.required} for t in p.terms.values()],
+            }
+            for p in list_playbooks()
+        ]
+    }
 
 
 @router.post("/v1/terms")

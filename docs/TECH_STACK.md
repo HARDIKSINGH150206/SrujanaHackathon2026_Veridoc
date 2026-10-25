@@ -29,8 +29,8 @@ Inherited from DigiVault and working (`docs/digivault-archive/DEVELOPMENT.md` ha
 | Synthetic samples | `samples/veridoc/` | Built |
 | Chat parser, text-PDF reader (`pypdf`) | `apps/ai-service/app/chat_import.py` | Built |
 | Term extractor with grounding, value check and rule flags | `apps/ai-service/app/term_extractor.py` | Built (rules for amounts, dates and the seven flags; number words not yet) |
-| Terms endpoints | `apps/ai-service/app/terms_router.py`, `apps/web/src/app/api/v1/evidence/terms/route.ts`, `apps/web/src/lib/terms.ts` | Built |
-| Terms screen | `apps/web/src/app/dashboard/terms/page.tsx`, `_workspace/terms-view.tsx` | Built, not clicked through |
+| Terms endpoints | `apps/ai-service/app/terms_router.py`, `apps/web/src/app/api/v1/evidence/terms/route.ts`, `apps/web/src/lib/terms.ts`; plus `GET /v1/playbooks` and `GET /api/v1/evidence/playbooks` | Built |
+| Terms screen | `apps/web/src/app/dashboard/terms/page.tsx`, `_workspace/terms-view.tsx` | Built, checked in a browser |
 | Recommendation | `apps/ai-service/app/suggestion.py` | Planned |
 | Recap, echo code | `apps/ai-service/app/recap.py` | Planned |
 | Playbooks (JSON, no code) | `playbooks/` (path set by `PLAYBOOK_DIR`) | Built (two) |
