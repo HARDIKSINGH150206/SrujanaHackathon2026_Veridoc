@@ -1,0 +1,10 @@
+12/03/2026, 10:02 - Dev: Hi Kavi, need 200 notebooks for the school camp. Rate kya hai?
+12/03/2026, 10:05 - Kavi: Hello Dev! A5 ruled notebooks, ₹45 per piece. 200 ka total ₹9000 hoga.
+12/03/2026, 10:07 - Dev: Thoda kam nahi ho sakta?
+12/03/2026, 10:09 - Kavi: Bulk hai isliye ₹45 final. Delivery 20 March tak.
+12/03/2026, 10:12 - Dev: Theek hai, deal. Advance kitna?
+12/03/2026, 10:13 - Kavi: ₹3000 advance abhi, baaki ₹6000 delivery pe.
+12/03/2026, 10:20 - Dev: UPI se ₹3000 bhej diya, check kar lo
+12/03/2026, 10:24 - Kavi: Mil gaya, thanks. 20 March ko 200 notebooks pakka.
+12/03/2026, 10:25 - Dev: Cover pe school ka logo bhi chahiye, extra charge nahi na?
+12/03/2026, 10:27 - Kavi: Logo free hai, bas file bhej do.
