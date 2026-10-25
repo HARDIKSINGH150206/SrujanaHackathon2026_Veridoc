@@ -1,12 +1,21 @@
 import base64
 import binascii
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 
+from .model_adapter import adapter_from_env
 from .real_suggestions import generate_suggestions
 from .schemas import SuggestionRequest, SuggestionResponse
 
-app = FastAPI(title="DigiVault AI Service", description=(
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Refuses to start on bad model settings or a model file that fails models/manifest.json.
+    app.state.model_adapter = adapter_from_env()
+    yield
+
+
+app = FastAPI(title="DigiVault AI Service", lifespan=lifespan, description=(
         "Multilingual (English + Hindi/Devanagari + Kannada) NER redaction service. "
         "Suggests grid tiles to redact; suggestion-only, never touches the Merkle hash."
     ),

@@ -1,0 +1,9 @@
+{
+  "_comment": "Pins the SHA-256 of each model file the AI service may load. The entry below is a PLACEHOLDER (all-zero hash): the service refuses it until a real model is chosen and its hash is pinned here. Weights themselves are never committed.",
+  "models": [
+    {
+      "file": "PLACEHOLDER-model.gguf",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}

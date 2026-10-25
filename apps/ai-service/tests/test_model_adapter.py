@@ -8,6 +8,7 @@ from app.model_adapter import (
     LocalModelAdapter,
     ModelAdapter,
     RecordingNotFound,
+    adapter_from_env,
     build_adapter,
     chat_fingerprint,
     number_chat,
@@ -99,6 +100,15 @@ class LocalAdapterStubTests(unittest.TestCase):
 class BuildAdapterTests(unittest.TestCase):
     def test_fake_mode_builds_the_fake_adapter(self):
         self.assertIsInstance(build_adapter(settings_from_env({})), FakeModelAdapter)
+
+
+class StartupTests(unittest.TestCase):
+    def test_fake_mode_is_the_default_at_startup(self):
+        self.assertIsInstance(adapter_from_env({}), FakeModelAdapter)
+
+    def test_local_mode_without_a_model_file_stops_startup(self):
+        with self.assertRaises(ValueError):
+            adapter_from_env({"MODEL_MODE": "local"})
 
 
 class FingerprintTests(unittest.TestCase):

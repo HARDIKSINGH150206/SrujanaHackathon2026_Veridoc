@@ -9,9 +9,11 @@ import hashlib
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from collections.abc import Mapping
 from pathlib import Path
 
-from .settings import Settings
+from .model_manifest import REPO_MANIFEST, verify_model_file
+from .settings import Settings, settings_from_env
 
 RECORDINGS_FILE = Path(__file__).resolve().parent.parent / "recorded" / "recordings.json"
 
@@ -76,7 +78,15 @@ class LocalModelAdapter(ModelAdapter):
         raise NotImplementedError("local model adapter is not implemented yet")
 
 
-def build_adapter(settings: Settings) -> ModelAdapter:
+def build_adapter(settings: Settings, manifest_path: Path = REPO_MANIFEST) -> ModelAdapter:
+    """Fake mode replays recordings. Local mode refuses a model file that fails the manifest check."""
     if settings.model_mode == "fake":
         return FakeModelAdapter()
+    assert settings.model_file_path is not None  # settings_from_env guarantees it in local mode
+    verify_model_file(settings.model_file_path, manifest_path, settings.model_sha256)
     return LocalModelAdapter()
+
+
+def adapter_from_env(env: Mapping[str, str] | None = None) -> ModelAdapter:
+    """Called once at service startup: bad settings or a bad model file stop the service."""
+    return build_adapter(settings_from_env(env))
