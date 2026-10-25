@@ -95,7 +95,7 @@ class FakeModelAdapter(ModelAdapter):
         data = json.loads(recordings_file.read_text(encoding="utf-8"))
         self._recordings = {(r["playbook_id"], r["chat_sha256"]): r for r in data["recordings"]}
 
-    def extract(self, numbered_chat: str, playbook_id: str) -> ExtractionResult:
+    def extract(self, numbered_chat: str, playbook_id: str) -> ModelOutput:
         key = (playbook_id, chat_fingerprint(numbered_chat))
         recording = self._recordings.get(key)
         if recording is None:
