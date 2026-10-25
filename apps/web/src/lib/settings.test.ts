@@ -6,6 +6,7 @@ describe("settingsFromEnv", () => {
     const s = settingsFromEnv({});
     expect(s).toEqual({
       modelMode: "fake",
+      transcriberMode: "fake",
       playbookDir: "playbooks",
       redactionRulesFile: null,
       shareLinkTtlHours: 72,
@@ -24,6 +25,7 @@ describe("settingsFromEnv", () => {
   it("reads every value from the environment", () => {
     const s = settingsFromEnv({
       MODEL_MODE: "local",
+      TRANSCRIBER_MODE: "local",
       PLAYBOOK_DIR: "/srv/playbooks",
       REDACTION_RULES_FILE: "/srv/rules.json",
       SHARE_LINK_TTL_HOURS: "24",
@@ -32,6 +34,7 @@ describe("settingsFromEnv", () => {
     });
     expect(s).toEqual({
       modelMode: "local",
+      transcriberMode: "local",
       playbookDir: "/srv/playbooks",
       redactionRulesFile: "/srv/rules.json",
       shareLinkTtlHours: 24,
@@ -44,22 +47,32 @@ describe("settingsFromEnv", () => {
     expect(() => settingsFromEnv({ MODEL_MODE: "remote" })).toThrow(/MODEL_MODE/);
   });
 
+  it("rejects an unknown TRANSCRIBER_MODE", () => {
+    expect(() => settingsFromEnv({ TRANSCRIBER_MODE: "cloud" })).toThrow(/TRANSCRIBER_MODE/);
+  });
+
   it.each(["0", "-3", "abc", "1.5"])("rejects SHARE_LINK_TTL_HOURS=%s", (v) => {
     expect(() => settingsFromEnv({ SHARE_LINK_TTL_HOURS: v })).toThrow(/SHARE_LINK_TTL_HOURS/);
   });
 });
 
 describe("demoBadgeText", () => {
-  it("shows the badge whenever the model is fake", () => {
-    expect(demoBadgeText({})).toBe("Demo mode: recorded model output");
-    expect(demoBadgeText({ MODEL_MODE: "fake" })).toBe("Demo mode: recorded model output");
+  it("says what is recorded: the model output and the transcript, while both are fake", () => {
+    expect(demoBadgeText({})).toBe("Demo mode: recorded model output and recorded transcript");
+    expect(demoBadgeText({ MODEL_MODE: "fake", TRANSCRIBER_MODE: "fake" })).toBe("Demo mode: recorded model output and recorded transcript");
   });
 
-  it("uses DEMO_MODE_BADGE as the label but never turns the badge off while fake", () => {
-    expect(demoBadgeText({ MODEL_MODE: "fake", DEMO_MODE_BADGE: "Recorded output" })).toBe("Recorded output");
+  it("names only the part that is recorded", () => {
+    expect(demoBadgeText({ TRANSCRIBER_MODE: "local" })).toBe("Demo mode: recorded model output");
+    expect(demoBadgeText({ MODEL_MODE: "local" })).toBe("Demo mode: recorded transcript");
   });
 
-  it("shows no badge for a real model", () => {
-    expect(demoBadgeText({ MODEL_MODE: "local" })).toBeNull();
+  it("uses DEMO_MODE_BADGE as the label but never turns the badge off while anything is fake", () => {
+    expect(demoBadgeText({ DEMO_MODE_BADGE: "Recorded output" })).toBe("Recorded output");
+    expect(demoBadgeText({ TRANSCRIBER_MODE: "local", DEMO_MODE_BADGE: "Recorded output" })).toBe("Recorded output");
+  });
+
+  it("shows no badge when the model and the transcriber are both real", () => {
+    expect(demoBadgeText({ MODEL_MODE: "local", TRANSCRIBER_MODE: "local" })).toBeNull();
   });
 });

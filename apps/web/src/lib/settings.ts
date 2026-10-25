@@ -9,9 +9,11 @@ type Env = Record<string, string | undefined>;
  */
 
 export type ModelMode = "fake" | "local";
+export type TranscriberMode = "fake" | "local";
 
 export interface Settings {
   modelMode: ModelMode;
+  transcriberMode: TranscriberMode;
   playbookDir: string;
   redactionRulesFile: string | null;
   shareLinkTtlHours: number;
@@ -33,12 +35,16 @@ export function settingsFromEnv(env: Env = process.env): Settings {
   const mode = read(env, "MODEL_MODE") ?? "fake";
   if (mode !== "fake" && mode !== "local") throw new Error(`MODEL_MODE must be "fake" or "local", got "${mode}".`);
 
+  const transcriber = read(env, "TRANSCRIBER_MODE") ?? "fake";
+  if (transcriber !== "fake" && transcriber !== "local") throw new Error(`TRANSCRIBER_MODE must be "fake" or "local", got "${transcriber}".`);
+
   const ttlRaw = read(env, "SHARE_LINK_TTL_HOURS");
   const ttl = ttlRaw === null ? DEFAULT_SHARE_LINK_TTL_HOURS : Number(ttlRaw);
   if (!Number.isInteger(ttl) || ttl <= 0) throw new Error(`SHARE_LINK_TTL_HOURS must be a whole number > 0, got "${ttlRaw}".`);
 
   return {
     modelMode: mode,
+    transcriberMode: transcriber,
     playbookDir: read(env, "PLAYBOOK_DIR") ?? DEFAULT_PLAYBOOK_DIR,
     redactionRulesFile: read(env, "REDACTION_RULES_FILE"),
     shareLinkTtlHours: ttl,
@@ -48,11 +54,17 @@ export function settingsFromEnv(env: Env = process.env): Settings {
 }
 
 /**
- * Label for the always-on demo banner, or null for a real model. DEMO_MODE_BADGE
- * only changes the wording: the badge cannot be switched off while the model is
- * fake, so recorded output is never shown as live model output.
+ * Label for the always-on demo banner, or null when the model and the transcriber are both real.
+ * It names what is recorded: the model output, the transcript, or both. DEMO_MODE_BADGE only
+ * changes the wording: the badge cannot be switched off while anything is fake, so recorded
+ * output is never shown as live.
  */
 export function demoBadgeText(env: Env = process.env): string | null {
   const s = settingsFromEnv(env);
-  return s.modelMode === "fake" ? s.demoModeBadge : null;
+  const parts: string[] = [];
+  if (s.modelMode === "fake") parts.push("recorded model output");
+  if (s.transcriberMode === "fake") parts.push("recorded transcript");
+  if (parts.length === 0) return null;
+  if (s.demoModeBadge !== DEFAULT_DEMO_MODE_BADGE) return s.demoModeBadge;
+  return `Demo mode: ${parts.join(" and ")}`;
 }

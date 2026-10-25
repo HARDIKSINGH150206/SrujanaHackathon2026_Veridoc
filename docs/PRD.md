@@ -174,7 +174,7 @@ Status as of this document. "Real" means it runs in this repository today. The d
 | Term extractor with quote and value-versus-quote checks, flags (seven rule flags), needs_review | Real, tested. Shown on `/dashboard/terms`, checked in a browser | Runs on recorded model output (demo) |
 | Recap in English and Hindi (fixed templates, confirmed terms only), open points, three-tone suggested messages | Real, tested. Saved through the normal upload, checked in a browser | Hindi wording is a draft, not reviewed by a native speaker |
 | Echo code and reply check | Real, tested (vectors pinned against an independent implementation) | The code does not show who sent a reply |
-| Voice notes | | Not built. Transcripts would be pre-recorded for the demo |
+| Voice notes in an export folder: numbered with spans, audio SHA-256, "from voice note" sources, play the moment, text-versus-voice contradiction, chat record saved with the audio fingerprint | Real, tested, checked in a browser | **Demo.** Transcripts are recorded, not speech recognition (the badge says "recorded transcript"). The synthetic sample voice is ffmpeg flite text-to-speech. The local transcriber (faster-whisper) is a stub. The audio is not stored in the vault, only its SHA-256 |
 | Chat saved to the vault | | Not built (design in `ARCHITECTURE.md`, ADR-040 accepted) |
 
 ## 9. Non-functional requirements

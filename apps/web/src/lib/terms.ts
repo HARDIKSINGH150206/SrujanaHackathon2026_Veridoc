@@ -5,10 +5,25 @@
  * hash path; a term reaches the vault only when a person confirms it.
  */
 
+export interface VoiceNoteInput {
+  name: string;
+  audio_base64: string;
+}
+
 export interface TermsRequest {
   playbook_id: string;
   chat_text?: string;
   pdf_base64?: string;
+  voice_notes?: VoiceNoteInput[];
+  voice_corrections?: Record<string, string>;
+}
+
+export interface VoiceInfo {
+  name: string;
+  sha256: string;
+  size: number;
+  corrected: boolean;
+  segments: { start_ms: number; end_ms: number; text: string }[];
 }
 
 export type TermStatus = "stated" | "unclear" | "contradicted" | "missing" | "needs_review";
@@ -18,6 +33,8 @@ export interface TermSource {
   sender: string | null;
   text: string;
   quote: string;
+  /** Set when the quote comes from a voice note: its audio and the transcript span. */
+  voice?: { name: string; sha256: string; start_ms: number; end_ms: number } | null;
 }
 
 export interface TermView {
@@ -45,10 +62,13 @@ export interface FlagView {
 export interface TermsResponse {
   playbook_id: string;
   model_mode: string;
+  transcriber_mode: string;
   demo_mode: boolean;
   demo_badge: string | null;
-  messages: { n: number; kind: string; sender: string | null; text: string; timestamp: string | null }[];
+  numbered_chat: string;
+  messages: { n: number; kind: string; sender: string | null; text: string; timestamp: string | null; voice: VoiceInfo | null }[];
   import_problems: { line: number; text: string }[];
+  voice_problems: string[];
   report: { terms: TermView[]; flags: FlagView[]; ignored_keys: string[]; output_problems: string[]; model_error: string | null };
 }
 
@@ -63,7 +83,30 @@ export function parseTermsRequest(input: unknown): { ok: true; value: TermsReque
   if (hasText === hasPdf) return { ok: false, message: "Send exactly one of chat_text or pdf_base64." };
   if (hasText) {
     if (typeof o.chat_text !== "string") return { ok: false, message: "chat_text must be text." };
-    return { ok: true, value: { playbook_id: o.playbook_id, chat_text: o.chat_text } };
+    const value: TermsRequest = { playbook_id: o.playbook_id, chat_text: o.chat_text };
+    if (o.voice_notes !== undefined) {
+      if (!Array.isArray(o.voice_notes)) return { ok: false, message: "voice_notes must be a list." };
+      const notes: VoiceNoteInput[] = [];
+      for (const n of o.voice_notes) {
+        const r = n as Record<string, unknown> | null;
+        if (typeof r !== "object" || r === null || typeof r.name !== "string" || typeof r.audio_base64 !== "string") {
+          return { ok: false, message: "Each voice note needs a name and audio_base64." };
+        }
+        notes.push({ name: r.name, audio_base64: r.audio_base64 });
+      }
+      value.voice_notes = notes;
+    }
+    if (o.voice_corrections !== undefined) {
+      const c = o.voice_corrections as Record<string, unknown> | null;
+      if (typeof c !== "object" || c === null || Array.isArray(c) || !Object.values(c).every((v) => typeof v === "string")) {
+        return { ok: false, message: "voice_corrections must map file names to text." };
+      }
+      value.voice_corrections = c as Record<string, string>;
+    }
+    return { ok: true, value };
+  }
+  if (o.voice_notes !== undefined && !(Array.isArray(o.voice_notes) && o.voice_notes.length === 0)) {
+    return { ok: false, message: "Voice notes go with chat_text, not with a PDF." };
   }
   if (typeof o.pdf_base64 !== "string") return { ok: false, message: "pdf_base64 must be text." };
   return { ok: true, value: { playbook_id: o.playbook_id, pdf_base64: o.pdf_base64 } };
