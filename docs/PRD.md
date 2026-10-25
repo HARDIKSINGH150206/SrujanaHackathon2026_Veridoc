@@ -172,8 +172,8 @@ Status as of this document. "Real" means it runs in this repository today. The d
 | Model output format with `quote[]` and `msg[]` | Real: the adapter, the recordings and `check_model_output` use it | |
 | Chat parser (Android and iPhone exports, text PDFs) | Real, tested | Scanned PDFs: "not supported yet" |
 | Term extractor with quote and value-versus-quote checks, flags (seven rule flags), needs_review | Real, tested. Shown on `/dashboard/terms` | Runs on recorded model output (demo). Not clicked through in a browser yet |
-| Recommendation | | Not built |
-| Recap and echo code | | Not built |
+| Recap in English and Hindi (fixed templates, confirmed terms only), open points, three-tone suggested messages | Real, tested. Saved through the normal upload, checked in a browser | Hindi wording is a draft, not reviewed by a native speaker |
+| Echo code and reply check | Real, tested (vectors pinned against an independent implementation) | The code does not show who sent a reply |
 | Voice notes | | Not built. Transcripts would be pre-recorded for the demo |
 | Chat saved to the vault | | Not built (design in `ARCHITECTURE.md`, ADR-040 accepted) |
 

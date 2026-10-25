@@ -28,7 +28,8 @@ Honest status (full table in `docs/PRD.md` section 8):
 - **Real:** the evidence vault (feature 6), anchoring, the verify page, redaction and share links, the audit log, typed settings, the model adapter interface, and the model-file hash check.
 - **Demo:** model output is **recorded** for two synthetic chats and replayed by a fake adapter. While `MODEL_MODE=fake` (the default) every page shows "Demo mode: recorded model output".
 - **Built, on recorded model output:** the chat parser (WhatsApp exports, text PDFs), the term extractor with quote and value checks, the seven rule flags, and a Chat terms screen. Everything that fails a check shows as needs review.
-- **Not built yet:** confirming terms, recommendation, recap and echo code, voice notes, the local model (a stub; no model is pinned).
+- **Built:** confirming stated terms, a recap in English and Hindi (fixed templates, no model text), suggested next messages in three tones, saving the recap through the normal upload, and an echo code with a reply check (`docs/RECAP_DESIGN.md`).
+- **Not built yet:** saving the pasted reply as a further version, correcting a term before confirming it, voice notes, the local model (a stub; no model is pinned).
 
 The AI only suggests. It never writes to the vault, the audit log or the hash path.
 
