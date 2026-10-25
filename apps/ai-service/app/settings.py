@@ -13,6 +13,7 @@ DEFAULT_DEMO_MODE_BADGE = "Demo mode: recorded model output"
 DEFAULT_PLAYBOOK_DIR = "playbooks"
 DEFAULT_DATA_DIR = "data"
 MODEL_MODES = ("fake", "local")
+TRANSCRIBER_MODES = ("fake", "local")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -23,6 +24,7 @@ class SettingsError(ValueError):
 @dataclass(frozen=True)
 class Settings:
     model_mode: str
+    transcriber_mode: str
     model_file_path: str | None
     model_sha256: str | None
     llama_server_path: str | None
@@ -44,6 +46,10 @@ def settings_from_env(env: Mapping[str, str] | None = None) -> Settings:
     if mode not in MODEL_MODES:
         raise SettingsError(f'MODEL_MODE must be "fake" or "local", got "{mode}".')
 
+    transcriber = _read(env, "TRANSCRIBER_MODE") or "fake"
+    if transcriber not in TRANSCRIBER_MODES:
+        raise SettingsError(f'TRANSCRIBER_MODE must be "fake" or "local", got "{transcriber}".')
+
     sha = _read(env, "MODEL_SHA256")
     if sha is not None:
         sha = sha.lower()
@@ -59,6 +65,7 @@ def settings_from_env(env: Mapping[str, str] | None = None) -> Settings:
 
     return Settings(
         model_mode=mode,
+        transcriber_mode=transcriber,
         model_file_path=model_file,
         model_sha256=sha,
         llama_server_path=llama_server,
@@ -67,3 +74,20 @@ def settings_from_env(env: Mapping[str, str] | None = None) -> Settings:
         data_dir=_read(env, "DATA_DIR") or DEFAULT_DATA_DIR,
         demo_mode_badge=_read(env, "DEMO_MODE_BADGE") or DEFAULT_DEMO_MODE_BADGE,
     )
+
+
+def demo_badge_text(s: Settings) -> str | None:
+    """The banner for recorded parts, or None when nothing is recorded.
+
+    DEMO_MODE_BADGE changes the words but never hides the banner while anything is fake.
+    """
+    parts = []
+    if s.model_mode == "fake":
+        parts.append("recorded model output")
+    if s.transcriber_mode == "fake":
+        parts.append("recorded transcript")
+    if not parts:
+        return None
+    if s.demo_mode_badge != DEFAULT_DEMO_MODE_BADGE:
+        return s.demo_mode_badge
+    return "Demo mode: " + " and ".join(parts)

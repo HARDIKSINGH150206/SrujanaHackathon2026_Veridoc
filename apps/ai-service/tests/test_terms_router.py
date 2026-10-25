@@ -43,7 +43,7 @@ class TermsRouteTests(unittest.TestCase):
     def test_response_says_demo_mode_while_the_model_is_fake(self):
         body = self.post({"playbook_id": "supply-order", "chat_text": SUPPLY}).json()
         self.assertTrue(body["demo_mode"])
-        self.assertEqual(body["demo_badge"], "Demo mode: recorded model output")
+        self.assertEqual(body["demo_badge"], "Demo mode: recorded model output and recorded transcript")
 
     def test_text_pdf_is_accepted(self):
         pdf = chat_pdf([line.replace("₹", "Rs ") for line in SUPPLY.splitlines()])  # the PDF font has no rupee sign

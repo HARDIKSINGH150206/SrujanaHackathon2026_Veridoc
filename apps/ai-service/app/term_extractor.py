@@ -173,6 +173,8 @@ class Source:
     sender: str | None
     text: str
     quote: str
+    # Set when the quote comes from a voice note: its audio, and the transcript span the quote sits in.
+    voice: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -214,7 +216,7 @@ class Report:
                     "key": t.key, "label": t.label, "type": t.type, "required": t.required,
                     "status": t.status, "model_status": t.model_status, "value": t.value,
                     "quote": list(t.quote), "msg": list(t.msg), "reason": t.reason, "problems": t.problems,
-                    "sources": [{"msg": s.msg, "sender": s.sender, "text": s.text, "quote": s.quote} for s in t.sources],
+                    "sources": [{"msg": s.msg, "sender": s.sender, "text": s.text, "quote": s.quote, "voice": s.voice} for s in t.sources],
                 }
                 for t in self.terms.values()
             ],
@@ -246,7 +248,7 @@ def _check_quotes(pt, status: str, quote: tuple[str, ...], msg: tuple[int, ...],
             problems.append(f"message {n} does not exist (the chat has {len(messages)})")
             continue
         m = messages[n - 1]
-        if m.kind != "message":
+        if m.kind not in ("message", "voice"):
             problems.append(f"message {n} is a {m.kind} entry, not something a person wrote")
             continue
         if not _norm(q):
@@ -259,6 +261,31 @@ def _check_quotes(pt, status: str, quote: tuple[str, ...], msg: tuple[int, ...],
             problems.append(f"the quote {q!r} is not in message {n}")
         if _INSTRUCTION.search(m.text):
             problems.append(f"message {n} reads like an instruction to an AI, not like a term")
+
+
+def _voice_source(m: Message, quote: str) -> dict | None:
+    """The audio and the transcript span for a quote taken from a voice note."""
+    if m.voice is None or not m.voice.segments:
+        return None
+    seg = next((s for s in m.voice.segments if _norm(quote) in _norm(s.text)), None)
+    start = seg.start_ms if seg else m.voice.segments[0].start_ms
+    end = seg.end_ms if seg else m.voice.segments[-1].end_ms
+    return {"name": m.voice.name, "sha256": m.voice.sha256, "start_ms": start, "end_ms": end}
+
+
+def _text_voice_flags(pt, quote: tuple[str, ...], msg: tuple[int, ...], messages: list[Message]) -> list[Flag]:
+    """A typed message and a voice note that give different numbers for the same term."""
+    if pt.type not in ("money", "quantity"):
+        return []
+    cited = [(q, n, _quote_numbers(q)) for q, n in zip(quote, msg) if 1 <= n <= len(messages)]
+    texts = [c for c in cited if messages[c[1] - 1].kind == "message" and c[2]]
+    voices = [c for c in cited if messages[c[1] - 1].kind == "voice" and c[2]]
+    for tq, tn, tnums in texts:
+        for vq, vn, vnums in voices:
+            if tnums.isdisjoint(vnums):
+                reason = f'The text says "{tq}" (message {tn}); the voice note says "{vq}" (message {vn}).'
+                return [Flag("text_voice_contradiction", pt.key, (tn, vn), reason)]
+    return []
 
 
 def _numeric_sets(term_type: str, quote: tuple[str, ...]) -> list[set[Decimal]]:
@@ -308,18 +335,19 @@ def _build_term(pt, raw, messages: list[Message]) -> tuple[Term, list[Flag]]:
         # Rule flags over the cited messages (valid ones only).
         seen: set[tuple[str, int]] = set()
         for q, n in zip(quote, msg):
-            if 1 <= n <= len(messages) and messages[n - 1].kind == "message":
+            if 1 <= n <= len(messages) and messages[n - 1].kind in ("message", "voice"):
                 m = messages[n - 1]
-                sources.append(Source(n, m.sender, m.text, q))
+                sources.append(Source(n, m.sender, m.text, q, _voice_source(m, q)))
                 for fid, reason in detect_flags(pt.type, m.text, q):
                     if (fid, n) not in seen:
                         seen.add((fid, n))
                         flags.append(Flag(fid, pt.key, (n,), reason))
-        cited = [n for n in msg if 1 <= n <= len(messages) and messages[n - 1].kind == "message"]
+        flags.extend(_text_voice_flags(pt, quote, msg, messages))
+        cited = [n for n in msg if 1 <= n <= len(messages) and messages[n - 1].kind in ("message", "voice")]
         if cited:
             last = max(cited)
             who = messages[last - 1].sender
-            if not any(m.kind == "message" and m.n > last and m.sender != who for m in messages):
+            if not any(m.kind in ("message", "voice") and m.n > last and m.sender != who for m in messages):
                 flags.append(Flag("unconfirmed", pt.key, (last,), f"{who} said this and nobody has replied to it."))
 
         unclear_ids = sorted({f.id for f in flags if f.id in UNCLEAR_FLAGS})
