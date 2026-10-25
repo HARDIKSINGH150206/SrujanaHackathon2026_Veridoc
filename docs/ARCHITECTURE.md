@@ -1,149 +1,109 @@
-# DigiVault — Architecture
+# VeriDoc — Architecture
 
-Whole-system view: components, data flows, data model, trust boundaries, and known gaps. Detailed specs live elsewhere:
-- Crypto construction → `docs/03-crypto-and-merkle-spec.md`
-- REST contract and proof file → `docs/04-api-spec.md`
-- Original dataflow diagram → `docs/02-architecture-and-dataflow.md`
-- Why things are the way they are → `docs/DECISIONS.md`
-- Planned changes → `docs/07-v2-build-plan.md`
+How the parts fit together and where the AI boundary sits. The hashing, anchoring and verification details are unchanged from DigiVault and live in `docs/02-architecture-and-dataflow.md` and `docs/03-crypto-and-merkle-spec.md`. This file covers how a chat reaches them.
 
-Sections marked **(v2)** describe planned state; everything else is current code.
+Status markers: **built** runs in this repository today; **planned** does not exist yet (`PRD.md` section 8).
 
----
+## 1. Main parts
 
-## 1. System context
+| Part | Where | Does | Status |
+|---|---|---|---|
+| Web app | `apps/web` | Screens, REST API, sign-in, hash re-verification, hash chain, anchoring, audit log | built (wording still old) |
+| Crypto core | `packages/crypto-core` | PDF page to PNG, tiles, salted Merkle tree. Shared by the browser, the server and the verify page | built |
+| Chat record builder | `apps/web` | Turns the imported chat into a PDF in the browser so the normal upload can hash it (ADR-040, proposed) | planned |
+| AI service | `apps/ai-service` | Redaction tile suggestions (built). Term extraction, flags, recommendation, recap text (planned) | partly built |
+| Model adapter | `apps/ai-service/app/model_adapter.py` | One interface, `extract(numbered_chat, playbook_id)`; fake or local behind it | built; local is a stub |
+| Vault storage | PostgreSQL (Prisma), MinIO | Versions, tiles, hash chain, audit log, page PNGs, anchor records | built |
+| Anchor | Polygon Amoy, `EvidenceAnchorV2.sol` | Public, append-only record of each version's commitment | built |
+| Verify page | `apps/web/src/app/verify` | Public, stateless check against MinIO and Polygon. No sign-in, no database | built |
 
-```
-                    ┌──────────────────────── Officer's browser ────────────────────────┐
-                    │ Next.js pages  +  packages/crypto-core                            │
-                    │ PDF.js → PNG pages → 20×20 salted leaves → RFC 6962 → commitment C│
-                    └───────────────┬───────────────────────────────────────────────────┘
-                                    │ REST, Bearer session token (+ X-StepUp-Token)
-                                    ▼
-┌──────────────── apps/web (Next.js 14 API routes, Node runtime) ────────────────┐   HTTP   ┌── apps/ai-service ──┐
-│ auth · RBAC · step-up · server re-hash (sharp + crypto-core) · hash chain      │ ───────► │ FastAPI             │
-│ redaction masking · background anchoring · audit log · shares · proofs · cert  │ ◄─────── │ Tesseract + spaCy + │
-└──────┬───────────────────────┬──────────────────────────────┬──────────────────┘  tiles   │ regex. Suggestions  │
-       │ Prisma                │ S3 API                       │ ethers v6 (signer)          │ only, no hashes     │
-       ▼                       ▼                              ▼                             └─────────────────────┘
-  PostgreSQL 17           MinIO                       Polygon Amoy (80002)
-  cases, versions,        page PNGs,                  EvidenceAnchor.sol
-  tiles, flags, shares,   merkle-root.json            0xFAf1031E2A4EF75Cf871bF93035DA062AB6D1A5b
-  AuditLog (insert-only)  per anchor                          ▲
-                                                              │ public JSON-RPC (read only)
-                                        ┌─────────────────────┴───────────────────────┐
-                                        │ /verify — Court Verification Portal          │
-                                        │ public, stateless, no /api/* call, no DB     │
-                                        └──────────────────────────────────────────────┘
-```
+## 2. From chat to receipt
 
-## 2. Components
+1. **Import (F1).** The browser reads the chat export. The messages are numbered from 1. Voice notes are stored with their SHA-256 and a transcript. Nothing leaves the machine.
+2. **Analyse (F2, F3).** The numbered chat goes to the AI service as text. Rules run first. Then the model adapter proposes terms, each with a quote and message numbers. A grounding check drops any term whose quote is not verbatim in the cited message. Code builds the status of each term (stated, unclear, contradicted, missing) and the flags. Nothing is written anywhere. The result goes back to the browser.
+3. **Confirm (F2).** The user confirms, corrects or rejects each term on screen. This is the only way a term becomes part of the record. A contradicted term needs a choice first.
+4. **Recommend (F4).** Code picks the biggest gap and fills a fixed template. The user copies the text and sends it in WhatsApp. VeriDoc sends nothing.
+5. **Recap (F5).** From confirmed terms only, a recap is built from fixed templates, with a 4-character echo code derived from the recap text. The user copies it to WhatsApp. The other person replies `CONFIRM <code>`. The user pastes the reply; VeriDoc checks code and sender.
+6. **Save (F6).** The browser builds a PDF of the record (numbered chat, with the fingerprints of the original export and voice-note files; later the confirmed terms, recap and confirmation) and uploads it through the existing route, `POST /api/v1/evidence/upload`. Each step after the first is a new version of the same document (`document_id`), so the hash chain links them. The browser hashes first, the server recomputes, the version is anchored in MinIO and on Polygon Amoy, and the audit log records it.
+7. **Receipt.** The user gets the verification files and a link to the verify page. A reviewer opens the link with no account. The page recomputes from the files and compares with the anchor.
 
-| Component | Path | Responsibility |
-|---|---|---|
-| **crypto-core** | `packages/crypto-core/src` | `render.ts` PDF.js → PNG; `tiles.ts` raw RGBA tile hashing; `hash.ts` SHA-256 + length-prefixed concat; `merkle.ts` tree; `pipeline.ts` end-to-end. Shared by browser, server and `/verify`. |
-| **Web app – UI** | `apps/web/src/app` | Landing, login, dashboard (`_workspace/`), case, upload, version view, share recipient page, `/verify`. |
-| **Web app – API** | `apps/web/src/app/api` | `auth/*` (login, PIN, WebAuthn) and `v1/*` (cases, documents, versions, upload, redaction, anchor, proof, certificate, pages, shares). |
-| **Server libs** | `apps/web/src/lib` | `server-hash.ts` re-verification + masking; `anchor.ts`/`polygon.ts` dual anchor; `storage.ts` MinIO; `audit.ts`; `rbac.ts`/`auth.ts`/`step-up.ts`/`webauthn.ts`/`pin.ts`; `rate-limit.ts`; `chain-hash.ts`; repos. |
-| **AI service** | `apps/ai-service/app` | `POST /v1/redaction-suggestions`: OCR (eng/hin/kan) + NER + regex → tile suggestions with confidence. |
-| **Contract** | `packages/contracts` | `EvidenceAnchor.sol`: owner-only, write-once `anchorRoot`, public `getAnchor`. |
-| **Database** | `prisma/` | Schema + migrations, incl. `digivault_app` role with UPDATE/DELETE revoked on `AuditLog`. |
+The echo code is not part of any Merkle tree. It is derived from the recap text (an algorithm adapted from the earlier VeriDoc design: a hash of the text, the first 20 bits written as 4 characters from the Crockford base32 alphabet) and is only a binding check between a reply and one exact recap. It does not identify who typed the reply.
 
-## 3. Key flows
+## 3. Diagram
 
-### 3.1 Upload (CLAUDE.md rule 4)
-1. Browser renders each page (scale 2.0) to lossless PNG, generates one random salt per tile, computes `clientHash`, salted leaves, page roots, document root `R` and commitment `C` (proof format v2, `docs/03`).
-2. `POST /api/v1/evidence/upload` with PNGs + metadata + salts.
-3. Server decodes PNGs with `sharp`, recomputes every leaf, `R` and `C` with the submitted salts; any mismatch → `409 HASH_MISMATCH`.
-4. Stores PNGs in MinIO; version, encrypted salts (one transaction) and tiles in Postgres; computes `chainHash`; writes audit row.
-5. Queues background anchoring; returns immediately.
+```mermaid
+flowchart TD
+  subgraph Browser["Browser (apps/web)"]
+    IMP["Import chat and voice notes (F1)"]
+    REV["Review and confirm terms (F2, F3)"]
+    REC["Recommendation and recap (F4, F5)"]
+    BLD["Build record PDF, hash first (F6)"]
+  end
 
-### 3.2 Redaction (rule 2)
-1. AI service receives page PNGs, returns tile suggestions (`RedactionFlag`, source + confidence).
-2. Officer selects tiles and confirms after step-up.
-3. Server masks tiles in its own copy of the PNGs, recomputes root server-side (never from client), stores a new version (`isRedacted = true`), anchors it.
+  subgraph AI["AI boundary: suggestions only (apps/ai-service)"]
+    RULES["Rules engine"]
+    ADP["Model adapter: fake or local"]
+    GRD["Grounding check: quote verbatim in cited message"]
+    FLG["Status and flags, from code"]
+  end
 
-### 3.3 Anchoring (rule 3)
-- `anchorVersion` first checks `getAnchor()` and reconciles an anchor that already landed (ADR-025), then writes `merkle-root.json` to the Object-Locked anchor bucket, then calls `anchorRoot(keccak256(versionId), root)` with capped fees, recording the tx hash as soon as it is sent.
-- On-chain sends are serialized through one in-process queue (single signer, nonce safety).
-- Each attempt is an `AnchorLog` row: `PENDING → ANCHORED | FAILED`. Never throws into the caller.
+  subgraph Vault["Trusted path (apps/web server, crypto-core)"]
+    UP["POST /api/v1/evidence/upload"]
+    VER["Server recomputes every hash"]
+    CHAIN["Hash chain and audit log"]
+  end
 
-### 3.4 Public verification (rule 5)
-- Verifier drops page PNGs + `verification-proof.json`.
-- Portal re-tiles and re-hashes in the browser, compares to the proof, then reads `getAnchor()` from the **hardcoded** contract/chain/anchorer. Proof-supplied contract addresses are never used for lookup.
-- Outcomes: Verified · Mismatch (naming the failing tile) · Invalid–untrusted. v1 proofs are labelled "Legacy v1 proof (unsalted)"; unknown proof versions are refused (ADR-021).
-- Certificate link mode `/verify?v=&c=&tx=` (ADR-022): chain-only check that the commitment is anchored for that version by that tx — explicitly not a file check. RPC: the configured default, then `rpc-amoy.polygon.technology`.
+  PG[("PostgreSQL")]
+  S3[("MinIO, Object Lock for anchors")]
+  POLY[("Polygon Amoy")]
+  VP["Verify page: public, stateless"]
 
-### 3.5 Sharing
-- IO creates a share (expiry, max views). Token is the credential; recipient needs no account.
-- Serves only the newest `READY` redacted version; otherwise `403 NO_REDACTED_VERSION`.
-
-### 3.6 (v2) Redaction proof, audit anchoring, certificate QR
-Redaction proofs (Phase 3, done; docs/03 §Redaction proofs): the verifier proves a redacted copy against the *original* commitment using revealed salts for unmasked tiles and given salted leaves for masked tiles. Audit anchoring (Phase 4, done; ADR-030): audit-chain heads ride along with each document anchor and are anchored on their own every 6 h, with an admin view at `/dashboard/audit`. Certificate QR (Phase 5, done): the s.63 PDF carries a QR for the chain-only link `/verify?v=&c=&tx=` (ADR-022), and states that scanning proves only that the commitment is anchored; verifying the file needs its pages and proof file.
-
-## 4. Data model (Prisma)
-
-```
-User ─┬─< Case ─< Document ─< DocumentVersion ─< AnchorLog
-      │                  │
-      │                  ├─< Tile ─< RedactionFlag        (Tile also belongs to its DocumentVersion — ADR-024)
-      │                  └─< DocumentShare
-      ├─< WebAuthnCredential
-      └─< AuditLog                                         (insert-only for digivault_app)
+  IMP -->|numbered chat text| RULES
+  RULES --> ADP
+  ADP -->|proposed terms with quotes| GRD
+  RULES --> GRD
+  GRD --> FLG
+  FLG -->|proposals and flags only| REV
+  REV -->|human confirms| REC
+  REC -->|confirmed terms and recap| BLD
+  BLD -->|pages, tile hashes, salts| UP
+  UP --> VER
+  VER --> CHAIN
+  CHAIN --> PG
+  CHAIN --> S3
+  CHAIN --> POLY
+  POLY --> VP
+  S3 --> VP
 ```
 
-Key fields: `DocumentVersion.{proofVersion, merkleRoot (R for v2), commitment (C, v2 only), clientHash, previousHash, chainHash, gridSize, isRedacted, status}`; `Tile.{documentVersionId, tileIndex, pageIndex, row, col, tileHash}`; `RedactionFlag.{entityType, confidenceScore, source, masked, reviewedBy}`; `AuditLog.{seq, prevHash, entryHash}`; `AnchorLog.{status, polygonTxHash, submittedTxHash, objectLockUri}`; `Case.{firRegisteredAt, offenceSections}`.
+The only arrow out of the AI boundary goes to the review screen. Nothing from the AI boundary reaches the upload route, the hash path, the audit log or the stores.
 
-`VersionSaltSet.{documentVersionId, tileCount, keyId, iv, ciphertext, authTag}` — encrypted per-tile salts, insert-only for the app role (ADR-018), one per v2 version.
+## 4. Where the AI boundary sits
+
+| Rule | How it is kept |
+|---|---|
+| The AI never writes to the vault, the audit log or the hash path | The AI service has no database or MinIO credentials and calls no vault route. It returns data to the web app, which shows it. A term reaches the vault only because a signed-in person confirmed it and the browser uploaded it |
+| Merkle roots come from raw tile pixel hashes | Unchanged (`CLAUDE.md` rule 2). OCR or model failure cannot affect a proof |
+| Every term needs a source quote and a human confirmation | Enforced in code before the term is shown as proposed (`AI_SPEC.md` sections 4–5) |
+| Chat text is data, never instructions | The model sees chat only inside a fenced data block with a fixed system instruction, and its output is schema-constrained and grounded (`AI_SPEC.md` section 6) |
+| Rules first, model second | The model is only asked about what rules did not settle, and a disagreement is shown as "needs review" (`AI_SPEC.md` section 3) |
+| Recorded output is labelled | While `MODEL_MODE=fake` the web app shows "Demo mode: recorded model output" on every page |
 
 ## 5. Trust boundaries
 
 | Boundary | Trusted for | Not trusted for |
 |---|---|---|
-| Officer's browser | Producing pages and a first hash | The hash itself — server recomputes |
-| AI service | Suggestions | Anything on the hash path; never final without human confirm |
-| App server / DB | Workflow, access control | Being the source of truth for integrity — the chain anchor is |
-| DB owner / admin | Operations | Not modifying evidence undetected (anchors); audit log (v2 chain + anchoring) |
-| Polygon Amoy | Timestamped, append-only record of commitments | Storing any content or PII (it stores none) |
-| Proof files | Carrying data to the verifier | Telling the verifier which contract/chain to trust |
+| Browser | Producing pages and a first hash | The hash itself; the server recomputes |
+| AI service and model | Suggestions | Anything on the hash path; anything final without a person |
+| Chat text | Being the data to analyse | Being instructions |
+| App server and database | Workflow, access control | Being the source of truth for integrity; the anchor is |
+| Database owner | Operations | Changing evidence undetected (anchors) or the audit log undetected (chain plus anchored heads) |
+| Polygon Amoy | A timestamped, append-only record of commitments | Holding any content (it holds none) |
+| Pasted WhatsApp reply | Carrying the echo code | Proving who typed it |
 
-## 6. Threat model (summary)
+## 6. What is not changed
 
-The paper's Table 2 was not available when this table was extended (Phase 8); the rows below cover the same adversaries plus those the v2 phases added. ✅ = defended in current code; ⚠️ = partial, with the limit stated.
-
-| Adversary | Attack | Defence | Status |
-|---|---|---|---|
-| External attacker | Alter a stored page in MinIO | Recomputed root ≠ on-chain anchor | ✅ |
-| Corrupt officer | Upload a doctored file and claim it's original | Anchored at upload time; chain shows any later version | ✅ (detects later change, not pre-upload forgery) |
-| Corrupt admin with DB access | Rewrite tile hashes / roots in Postgres | Anchors on chain; `/verify` never reads DB | ✅ |
-| Corrupt admin with DB owner role | Edit, delete or rewrite audit rows | Audit hash chain (P0.4) + heads anchored with every document anchor and every 6 h (Phase 4, ADR-030); `pnpm audit:verify --onchain` and `/dashboard/audit` | ✅ up to the last anchored head |
-| Malicious proof author | Point verifier at their own contract | Contract/chain/anchorer hardcoded (F-02) | ✅ |
-| Proof forger | Second-preimage via inner-node-as-leaf / duplicated leaf | RFC 6962 domain separation, no duplication; size fixed by the grid (ADR-027) | ✅ v2 (Phase 1); v1 legacy read-only |
-| Curious recipient of redacted copy | Brute-force masked tile content from its hash | Per-tile 32-byte salts; redacted versions get fresh salts | ✅ salts (Phase 1), redaction proofs withhold masked tiles' salts (Phase 3) |
-| Redactor | Show fabricated content inside a "masked" tile | Verifier checks masked tiles are solid mask colour | ✅ Phase 3 |
-| Share-link holder | Get the unredacted original | Shares serve only redacted versions (F-03) | ✅ |
-| Signing-key thief | Anchor forged commitments | Contract v2: revoke the key from the compromise time (its later anchors become untrusted in `/verify`), two-step owner rotation (ADR-028); HSM roadmap | ✅ Phase 2 (owner key remains a single point of trust) |
-| AI redaction miss | A victim's name or phone survives in a shared copy (BNS s.72) | Suggestions are never final: an officer reviews every page and can mask any tile; shares serve only redacted versions | ⚠️ depends on the reviewer; recall not yet measured (Phase 6) |
-| Stolen session token | Confirm a redaction, anchor or download a certificate as the officer | Those routes need a step-up token: 5 min, bound to the same user (`lib/step-up.ts`) | ⚠️ PIN fallback always accepted (§8) |
-| Leaked share link | Wider access to the shared copy | Token expiry and view limit; redacted versions only; every download audited | ✅ |
-| Officer moving the FIR date | Hide a missed BNSS s.193(2) deadline | Date and sections are changed only through an audited `PATCH` with old and new values (ADR-032) | ✅ detected in the audit log, not prevented |
-| Hostile or broken RPC endpoint | Tell `/verify` a commitment is (or isn't) anchored | Portal checks the chain ID and the hardcoded contract; configured RPC, then a public fallback | ⚠️ the portal trusts the RPC's answer; a second independent RPC would remove that |
-| Insider deleting evidence pages from MinIO | Make a document unverifiable | Anchors survive, so a missing or altered page is detected; anchor records are Object-Locked | ⚠️ detected, not prevented: the page bucket itself is not locked; backups out of scope |
-
-## 7. Deployment
-
-- **Local / demo:** `docker-compose.yml` runs Postgres 17 (`127.0.0.1:5434`) and MinIO (`9000`, console `9001`); web app via `next dev` on `:3000`; AI service via uvicorn on `:8001`. See `docs/DEVELOPMENT.md`.
-- **Chain:** Polygon Amoy testnet, chainId 80002. `EvidenceAnchorV2` `0x01e7e6f83f55873E906465d3447cB43434D4ee67` (current); `EvidenceAnchor` v1 `0xFAf1031E2A4EF75Cf871bF93035DA062AB6D1A5b` (legacy, read-only).
-- **Single-instance assumptions:** rate limiters, used-WebAuthn-challenge set and anchor queue are in process memory. Multi-instance needs Redis + a job queue.
-
-## 8. Known gaps (current code)
-
-| Gap | Impact | Fix |
-|---|---|---|
-| Anchor records written before P0.2 are in the unlocked evidence bucket | Only newer anchors are WORM-protected in MinIO | — (on-chain anchor still covers them) |
-| Audit entries after the last anchored head | A DB owner can rewrite them consistently until the next anchor (≤ 6 h, or the next document anchor) | Documented limit (ADR-030) |
-| 261 audit rows predate the chain (`seq` NULL) | Covered by the anchored `AUDIT_LEGACY_GENESIS` digest (ADR-026), not by per-row links | done |
-| v1 `chainHash` concatenates fields without separators | Theoretical input ambiguity, legacy versions only | done for new versions (v2 chain hash, Phase 1) |
-| v1 Merkle tree has no leaf/inner-node domain separation | Proof-forgery ambiguity, legacy versions only (`docs/03`) | done for new versions (v2, Phase 1) |
-| Anchor signing key read from `packages/contracts/.env` | Key on disk | Contract v2 rotation; HSM roadmap |
-| PIN fallback always accepted for step-up | Step-up only as strong as the PIN | Open (`docs/04`) |
+- The data model, the `Role` enum and every audit action string (ADR-039).
+- The 20×20 grid, PNG-only pages, the proof format (`docs/03`).
+- The public, stateless verify page (`CLAUDE.md` rule 5).
+- Dual anchoring of every version (`CLAUDE.md` rule 3).
