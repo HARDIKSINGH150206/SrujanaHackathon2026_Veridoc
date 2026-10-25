@@ -5,9 +5,12 @@ Every entry gets a number, counting media-omitted, deleted and system lines, so
 touches the vault or the hash path (CLAUDE.md rule 2).
 """
 
+import hashlib
 import io
 import re
 from dataclasses import dataclass, field
+
+from .transcriber import Segment, Transcriber, TranscriptNotFound
 
 # Direction marks and similar invisible characters WhatsApp puts into exports.
 _INVISIBLE = re.compile("[‎‏‪-‮﻿]")
@@ -32,13 +35,40 @@ class ScannedPdfNotSupported(ChatImportError):
     pass
 
 
+AUDIO_EXTENSIONS = (".opus", ".m4a", ".wav")
+MAX_AUDIO_BYTES = 10_000_000
+MAX_VOICE_NOTES = 20
+_ATTACHED = re.compile(r"^<attached: (.+)>$")
+_FILE_ATTACHED = re.compile(r"^(.+) \(file attached\)$")
+
+
+@dataclass(frozen=True)
+class Voice:
+    """A voice note: the audio's own SHA-256 (of the raw bytes) and its transcript, a suggestion a person can correct."""
+
+    name: str
+    sha256: str
+    size: int
+    segments: tuple[Segment, ...]
+    corrected: bool = False
+
+
 @dataclass(frozen=True)
 class Message:
     n: int
-    kind: str  # "message", "media", "deleted" or "system"
+    kind: str  # "message", "voice", "media", "deleted" or "system"
     sender: str | None
     text: str
     timestamp: str | None
+    voice: Voice | None = None
+
+    @property
+    def start_ms(self) -> int | None:
+        return self.voice.segments[0].start_ms if self.voice and self.voice.segments else None
+
+    @property
+    def end_ms(self) -> int | None:
+        return self.voice.segments[-1].end_ms if self.voice and self.voice.segments else None
 
 
 @dataclass
@@ -46,6 +76,8 @@ class ParseResult:
     messages: list[Message]
     # (1-based line number, text) of lines that came before the first message and belong to none.
     problems: list[tuple[int, str]] = field(default_factory=list)
+    # Plain-language notes about voice notes that could not be used (missing file, no transcript, too large).
+    voice_problems: list[str] = field(default_factory=list)
 
 
 def _header(line: str) -> tuple[str, str] | None:
@@ -97,6 +129,8 @@ def format_numbered(messages: list[Message]) -> str:
     for m in messages:
         if m.kind == "system":
             body = f"(system) {m.text}"
+        elif m.kind == "voice":
+            body = f"{m.sender}: (voice note) {m.text}"
         elif m.kind == "deleted":
             body = f"{m.sender}: (deleted message)"
         else:
@@ -105,6 +139,75 @@ def format_numbered(messages: list[Message]) -> str:
         out.append(f"[{m.n}] {first}")
         out.extend(f"    {line}" for line in rest)
     return "\n".join(out)
+
+
+def attachment_name(text: str) -> str | None:
+    """The file name of an audio attachment line (.opus, .m4a, .wav), or None. A name with a path is refused."""
+    m = _ATTACHED.match(text.strip()) or _FILE_ATTACHED.match(text.strip())
+    if m is None:
+        return None
+    name = m.group(1).strip()
+    if "/" in name or "\\" in name or not name.lower().endswith(AUDIO_EXTENSIONS):
+        return None
+    return name
+
+
+def import_export(
+    chat_text: str,
+    files: dict[str, bytes],
+    transcriber: Transcriber,
+    corrections: dict[str, str] | None = None,
+    max_audio_bytes: int = MAX_AUDIO_BYTES,
+    max_voice_notes: int = MAX_VOICE_NOTES,
+) -> ParseResult:
+    """Parse an export folder: the chat text plus its voice notes.
+
+    Each voice note becomes one numbered message whose text is its transcript. The audio is hashed
+    from its raw bytes. A voice note that cannot be used stays a media message and is explained in
+    voice_problems; nothing here raises for a bad voice note.
+    """
+    parsed = parse_chat(chat_text)
+    out: list[Message] = []
+    problems: list[str] = []
+    seen = 0
+    for m in parsed.messages:
+        name = attachment_name(m.text) if m.kind in ("media", "message") else None
+        if name is None:
+            out.append(m)
+            continue
+        seen += 1
+        audio = files.get(name)
+        if seen > max_voice_notes:
+            problems.append(f"Voice note {name} was skipped: too many voice notes (the limit is {max_voice_notes}).")
+        elif audio is None:
+            problems.append(f"Voice note {name} is not in the export folder.")
+        elif len(audio) > max_audio_bytes:
+            problems.append(f"Voice note {name} is too large ({len(audio)} bytes; the limit is {max_audio_bytes}).")
+        else:
+            try:
+                segments = list(transcriber.transcribe(audio, name))
+            except TranscriptNotFound as exc:
+                problems.append(f"Voice note {name}: {exc}.")
+                segments = []
+            except NotImplementedError as exc:
+                problems.append(f"Voice note {name}: transcriber not implemented. {exc}")
+                segments = []
+            except Exception as exc:  # a transcriber is a model: any failure is its own, not ours
+                problems.append(f"Voice note {name} could not be transcribed ({type(exc).__name__}).")
+                segments = []
+            fixed = (corrections or {}).get(name, "").strip()
+            corrected = bool(fixed) and bool(segments)
+            if corrected:
+                segments = [Segment(segments[0].start_ms, segments[-1].end_ms, fixed)]
+            text = " ".join(s.text.strip() for s in segments).strip()
+            if text:
+                voice = Voice(name, hashlib.sha256(audio).hexdigest(), len(audio), tuple(segments), corrected)
+                out.append(Message(m.n, "voice", m.sender, text, m.timestamp, voice))
+                continue
+            if segments:
+                problems.append(f"Voice note {name} has an empty transcript.")
+        out.append(m)
+    return ParseResult(out, parsed.problems, problems)
 
 
 def text_from_pdf(data: bytes) -> str:

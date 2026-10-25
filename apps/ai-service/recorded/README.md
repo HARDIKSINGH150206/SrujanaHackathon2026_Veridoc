@@ -18,3 +18,12 @@ Two planted mistakes, pinned by `tests/test_model_adapter.py`:
 - `freelance-job`: `advance` is recorded as `missing`, although messages 4 to 6 state it.
 
 The UI shows "Demo mode: recorded model output" while this is in use.
+
+## Voice note sample
+
+`samples/veridoc/voice-export/` has a third recording: the text says ₹45 per piece
+(message 1) and the voice note says 50 rupees per piece (message 3), so the model
+output marks `unit_price` as `contradicted`, quoting both. The voice note's
+transcript is itself recorded (`transcripts.json`, keyed by the SHA-256 of the
+audio file); no speech recognition ran. While `TRANSCRIBER_MODE=fake` the app says
+"recorded transcript".

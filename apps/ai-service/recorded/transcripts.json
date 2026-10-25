@@ -1,0 +1,20 @@
+{
+  "transcripts": [
+    {
+      "audio_sha256": "f607b532439a4d8dcd79c59887b0335656bf043e0945fbae40d02a5350727b73",
+      "name": "PTT-20260315-WA0001.wav",
+      "segments": [
+        {
+          "start_ms": 0,
+          "end_ms": 1820,
+          "text": "Dev, small correction."
+        },
+        {
+          "start_ms": 2220,
+          "end_ms": 4730,
+          "text": "The price is 50 rupees per piece."
+        }
+      ]
+    }
+  ]
+}

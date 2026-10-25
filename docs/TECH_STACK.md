@@ -37,6 +37,8 @@ Inherited from DigiVault and working (`docs/digivault-archive/DEVELOPMENT.md` ha
 | Recap screen, confirm boxes on Chat terms | `apps/web/src/app/dashboard/recap/page.tsx`, `_workspace/recap-view.tsx` | Built, checked in a browser |
 | Playbooks (JSON, no code) | `playbooks/` (path set by `PLAYBOOK_DIR`) | Built (two) |
 | Recap and suggestion templates | `playbooks/recap/` | Built |
+| Transcriber interface, recorded transcripts, local stub | `apps/ai-service/app/transcriber.py`, `recorded/transcripts.json` | Built; local (faster-whisper) is a stub |
+| Voice notes in an export folder, chat record PDF with the audio SHA-256 | `chat_import.py` (`import_export`), `apps/web/src/lib/chat-record.ts`, `terms-view.tsx` | Built |
 | Chat record builder (chat to PDF in the browser, then the normal upload) | `apps/web` | Planned (ADR-040, accepted) |
 
 Python libraries added: `pypdf` (text PDFs) and `httpx` (route tests). The rules use only the standard library; `dateparser` and `rapidfuzz` are not used.
@@ -69,6 +71,7 @@ Until a model is pinned and `LocalModelAdapter` is implemented, `MODEL_MODE` sta
 | `REDACTION_RULES_FILE` | web, ai-service | none | Redaction rules file (unset means built-in) |
 | `SHARE_LINK_TTL_HOURS` | web | 72 | Share link lifetime. Parsed, not yet used |
 | `DATA_DIR` | web, ai-service | `data` | Working data (git-ignored) |
+| `TRANSCRIBER_MODE` | web, ai-service | `fake` | `fake` replays recorded transcripts and the badge says so; `local` is the faster-whisper stub |
 | `DEMO_MODE_BADGE` | web, ai-service | "Demo mode: recorded model output" | Badge wording; cannot switch the badge off while the model is fake |
 
 No real values or secrets belong in the repository. See the `.env.example` files.

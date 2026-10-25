@@ -191,6 +191,11 @@ No chat text, transcript or name goes into a log. Logs may hold durations, the m
 
 ## 10. Voice notes
 
+Built (ADR-041): a WhatsApp export folder with `.opus`, `.m4a` or `.wav` voice notes is imported through `import_export` in `chat_import.py`. Each voice note is one numbered message `[n] Sender: (voice note) transcript` with `start_ms` and `end_ms` spans; its audio is hashed from the raw bytes. Transcripts come from a `Transcriber` (`transcriber.py`): `TRANSCRIBER_MODE=fake` replays recorded transcripts keyed by the audio's SHA-256 (the default, and the app then says "recorded transcript"); `local` is a faster-whisper stub that raises. A person can correct a transcript, and the correction is marked. A term cited from a voice note carries the audio and the transcript span, and a typed and a spoken number that differ give a `text_voice_contradiction` flag. A voice note that cannot be used (missing file, no transcript, too large, stub) stays a media message with a plain note; the import never fails for it.
+
+The rest of this section is the earlier plan.
+
+
 - Voice notes are stored as files with their SHA-256. The transcript is text and goes through the same pipeline as chat text, with the source marked as a transcript.
 - For the demo the transcript is pre-recorded. Live transcription with a local speech model is planned, not built.
 - Transcripts can be wrong. They are shown with a marker and can be corrected; a correction is a new transcript, not an edit.

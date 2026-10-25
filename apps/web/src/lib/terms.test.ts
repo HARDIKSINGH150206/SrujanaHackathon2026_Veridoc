@@ -32,6 +32,27 @@ describe("parseTermsRequest", () => {
     expect(r.ok).toBe(false);
   });
 
+  it("accepts voice notes and corrections with the chat text", () => {
+    const input = {
+      playbook_id: "p",
+      chat_text: "x",
+      voice_notes: [{ name: "PTT-1.opus", audio_base64: "AAAA" }],
+      voice_corrections: { "PTT-1.opus": "fixed" },
+    };
+    expect(parseTermsRequest(input)).toEqual({ ok: true, value: input });
+  });
+
+  it.each([
+    [{ playbook_id: "p", chat_text: "x", voice_notes: "no" }],
+    [{ playbook_id: "p", chat_text: "x", voice_notes: [{ name: 5, audio_base64: "A" }] }],
+    [{ playbook_id: "p", chat_text: "x", voice_notes: [{ name: "a.wav" }] }],
+    [{ playbook_id: "p", chat_text: "x", voice_corrections: [] }],
+    [{ playbook_id: "p", chat_text: "x", voice_corrections: { "a.wav": 5 } }],
+    [{ playbook_id: "p", pdf_base64: "x", voice_notes: [{ name: "a.wav", audio_base64: "A" }] }],
+  ])("rejects bad voice input %j", (input) => {
+    expect(parseTermsRequest(input).ok).toBe(false);
+  });
+
   it("drops fields it does not know about", () => {
     const r = parseTermsRequest({ playbook_id: "p", chat_text: "x", extra: 1 });
     expect(r).toEqual({ ok: true, value: { playbook_id: "p", chat_text: "x" } });

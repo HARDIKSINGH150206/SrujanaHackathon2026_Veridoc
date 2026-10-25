@@ -8,13 +8,16 @@ from .model_adapter import adapter_from_env
 from .real_suggestions import generate_suggestions
 from .recap_router import router as recap_router
 from .schemas import SuggestionRequest, SuggestionResponse
+from .settings import settings_from_env
 from .terms_router import router as terms_router
+from .transcriber import build_transcriber
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Refuses to start on bad model settings or a model file that fails models/manifest.json.
     app.state.model_adapter = adapter_from_env()
+    app.state.transcriber = build_transcriber(settings_from_env())
     yield
 
 
