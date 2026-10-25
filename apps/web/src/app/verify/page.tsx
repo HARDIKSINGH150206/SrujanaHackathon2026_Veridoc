@@ -22,10 +22,10 @@ import { describeRedactionProblem, recomputeRedaction } from "./redaction";
 import { CERTIFICATE_QR_STATEMENT } from "@/lib/certificate-text";
 
 /**
- * Court Verification Portal. CLAUDE.md rule 5 / step 6 Part 3 requirements:
+ * Verify page. CLAUDE.md rule 5 / step 6 Part 3 requirements:
  *   - No auth. There is no middleware.ts anywhere in this app (confirmed),
  *     and this page calls useAuth/RequireAuth nowhere in its tree.
- *   - No calls to DigiVault's own backend for the verification logic. This
+ *   - No calls to VeriDoc's own backend for the verification logic. This
  *     file makes exactly one kind of network call: a public JSON-RPC read
  *     against Polygon Amoy, via ethers, for the document_version_id in the
  *     proof file. No fetch() to this app's own /api/* anywhere below.
@@ -53,7 +53,7 @@ import { CERTIFICATE_QR_STATEMENT } from "@/lib/certificate-text";
  *     redacted version's own anchored commitment. Both anchors are read
  *     from the official contracts, never from the proof's addresses.
  *   - Three outcomes: VERIFIED; UNTRUSTED (the proof or RPC points at a
- *     chain/contract/anchorer other than DigiVault's official ones); or
+ *     chain/contract/anchorer other than the official VeriDoc ones); or
  *     MISMATCH for anything else that prevents a definitive VERIFIED (bad
  *     file, unreachable RPC, no anchor, a real hash mismatch). Fail-closed.
  */
@@ -125,7 +125,7 @@ async function readOfficialAnchor(provider: JsonRpcProvider, official: OfficialC
   }
   return (anchoredBy as string).toLowerCase() === LEGACY_V1_ANCHORER.toLowerCase()
     ? { ...base, trusted: true }
-    : { ...base, trusted: false, reason: "Invalid — anchor was not written by the official DigiVault account." };
+    : { ...base, trusted: false, reason: "Invalid — anchor was not written by the official VeriDoc anchoring account." };
 }
 const SUPPORTED_PROOF_VERSIONS = [1, 2];
 const LEGACY_V1_LABEL = "Legacy v1 proof (unsalted)";
@@ -189,7 +189,7 @@ async function checkCertificate(params: CertificateParams, rpcUrl: string): Prom
     if (!receipt || receipt.status !== 1) return { outcome: "mismatch", reason: "The transaction on the certificate was not found or failed." };
     const official = officialContract(receipt.to);
     if (!official) {
-      return { outcome: "untrusted", reason: "Invalid — the certificate's transaction was not sent to an official DigiVault contract.", detail: `to=${receipt.to}` };
+      return { outcome: "untrusted", reason: "Invalid — the certificate's transaction was not sent to a VeriDoc anchor contract.", detail: `to=${receipt.to}` };
     }
 
     const anchor = await readOfficialAnchor(provider, official, params.versionId);
@@ -650,7 +650,7 @@ export default function VerifyPage() {
       <main className="vf-main">
         <p className="vf-eyebrow">Public verification</p>
         <h1 className="vf-title">Record Verification</h1>
-        <p className="vf-lede">Independent verification - no account required, no connection to VeriDoc servers.</p>
+        <p className="vf-lede">Independent verification - no account required, no connection to VeriDoc servers. A record is tamper-evident: a mismatch shows it changed after it was anchored.</p>
 
         {certParams && certResult && (
           <div
@@ -668,7 +668,7 @@ export default function VerifyPage() {
               <>
                 <h2>Anchored: this certificate&apos;s commitment is on the public blockchain</h2>
                 <p style={{ color: "var(--paper)" }}>
-                  The commitment and transaction on this certificate match the official DigiVault record. No document file has been
+                  The commitment and transaction on this certificate match the VeriDoc anchor record. No document file has been
                   checked yet: add the page images and proof file below to verify the document itself.
                 </p>
                 <p className="vf-detail">{CERTIFICATE_QR_STATEMENT}</p>
@@ -778,7 +778,7 @@ export default function VerifyPage() {
                 <path d="M12 3.5 19 6.3v5.2c0 4.4-2.8 7.5-7 9-4.2-1.5-7-4.6-7-9V6.3l7-2.8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
                 <path d="m9 12 2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Verified against official DigiVault contract
+              Verified agreement record
               <a href={`https://amoy.polygonscan.com/address/${result.contract.address}`} target="_blank" rel="noreferrer" className="vf-code">
                 {result.contract.label} {shortHash(result.contract.address)}
               </a>
@@ -841,7 +841,7 @@ export default function VerifyPage() {
                 <path d="M12 3.5 19 6.3v5.2c0 4.4-2.8 7.5-7 9-4.2-1.5-7-4.6-7-9V6.3l7-2.8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
                 <path d="m9 12 2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Verified against official DigiVault contract
+              Verified agreement record
             </div>
           </div>
         )}
@@ -856,7 +856,7 @@ export default function VerifyPage() {
               </svg>
               <div>
                 <h2>{result.reason}</h2>
-                <p style={{ color: "var(--paper)" }}>This proof was not checked against the official DigiVault record. Treat the document as unverified.</p>
+                <p style={{ color: "var(--paper)" }}>This proof was not checked against the VeriDoc anchor record. Treat the document as unverified.</p>
               </div>
             </div>
             {result.detail && <p className="vf-detail">{result.detail}</p>}

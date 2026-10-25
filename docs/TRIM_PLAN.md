@@ -14,7 +14,6 @@ Ground rules (ADR-037, ADR-039):
 Still to do, in later steps:
 - The certificate PDF still carries the BSA s.63 wording (`certificate.ts`, `certificate-text.ts` and their test); the screens call it "certificate" and the download file is `certificate-v<n>.pdf`. Step 6 replaces it with a receipt.
 - The BNSS deadline code is unused by the screens but still exists (`lib/bnss-deadline.ts`, `_workspace/deadline.tsx`, the API fields, the `fir_registered_at` and `offence_sections` columns). `scripts/e2e-deadlines.mjs` and `scripts/seed-deadline-cases.mjs` test and seed it and are obsolete.
-- The verify page still says "official DigiVault contract" in its trust messages. That is the name of the deployed anchor, and the demo scripts look for it.
 - Code comments, the AI service's entity type names and redaction eval fixtures still use the old vocabulary.
 - `docs/digivault-archive/` keeps the original wording.
 

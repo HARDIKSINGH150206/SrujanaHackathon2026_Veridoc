@@ -51,7 +51,7 @@ async function verifyInPortal(browser, pngPaths, proofPath) {
     timeout: 60000,
   });
   const verdict = await verifyPage.locator(".result-card h2").textContent();
-  const officialLabel = (await verifyPage.locator("text=Verified against official DigiVault contract").count()) > 0;
+  const officialLabel = (await verifyPage.locator("text=Verified agreement record").count()) > 0;
   const detail = await verifyPage.locator(".result-card p").last().textContent();
   const text = await verifyPage.locator(".result-card").innerText();
   await anonCtx.close();
