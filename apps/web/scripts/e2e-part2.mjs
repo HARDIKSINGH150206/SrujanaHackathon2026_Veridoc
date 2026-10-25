@@ -23,7 +23,7 @@ import {
 } from "./e2e-helpers.mjs";
 
 async function main() {
-  const pdfPath = await makeTestPdf("e2e-test-part2.pdf", "E2E test FIR — Part 2");
+  const pdfPath = await makeTestPdf("e2e-test-part2.pdf", "E2E test document — Part 2");
   const browser = await chromium.launch();
   const context = await browser.newContext({ acceptDownloads: true });
   const page = await context.newPage();
@@ -32,7 +32,7 @@ async function main() {
 
   await login(page);
   const caseNumber = await createAndOpenCase(page, "E2E-P2");
-  const v1Url = await uploadDocument(page, pdfPath, "E2E Test FIR Part 2");
+  const v1Url = await uploadDocument(page, pdfPath, "E2E Test document Part 2");
   console.log("STEP: uploaded, on version page ->", v1Url);
 
   // F-03: nothing is shareable until a redacted version exists.

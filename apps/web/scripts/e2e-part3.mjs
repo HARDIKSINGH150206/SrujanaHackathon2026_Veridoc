@@ -150,7 +150,7 @@ async function checkShareLinkInPortal(browser, shareToken, officerPngPaths, dir)
 }
 
 async function main() {
-  const pdfPath = await makeTestPdf("e2e-test-part3.pdf", "E2E test FIR — Part 3 (verify portal)");
+  const pdfPath = await makeTestPdf("e2e-test-part3.pdf", "E2E test document — Part 3 (verify portal)");
   const downloadDir = mkdtempSync(path.join(tmpdir(), "digivault-verify-bundle-"));
   const browser = await chromium.launch();
 
@@ -161,7 +161,7 @@ async function main() {
 
   await login(page);
   await createAndOpenCase(page, "E2E-P3");
-  console.log("STEP: uploaded ->", await uploadDocument(page, pdfPath, "E2E Test FIR Part 3"));
+  console.log("STEP: uploaded ->", await uploadDocument(page, pdfPath, "E2E Test document Part 3"));
   console.log("STEP: redaction confirmed (PIN step-up) ->", await confirmFirstSuggestion(page, stepUpWithPin()));
 
   const anchor = await waitForAnchor(page);

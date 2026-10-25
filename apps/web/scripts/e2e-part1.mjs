@@ -9,7 +9,7 @@ import { chromium } from "playwright";
 import { BASE, login, createAndOpenCase, uploadDocument, makeTestPdf, logBrowserErrors } from "./e2e-helpers.mjs";
 
 async function main() {
-  const pdfPath = await makeTestPdf("e2e-test.pdf", "E2E test FIR", 2);
+  const pdfPath = await makeTestPdf("e2e-test.pdf", "E2E test document", 2);
   const browser = await chromium.launch();
   const page = await browser.newPage();
   logBrowserErrors(page);
@@ -29,7 +29,7 @@ async function main() {
   console.log("STEP: case created and opened ->", caseNumber, page.url());
 
   console.log("STEP: submitting upload (client-side hashing + real POST)...");
-  const finalUrl = await uploadDocument(page, pdfPath, "E2E Test FIR");
+  const finalUrl = await uploadDocument(page, pdfPath, "E2E Test document");
   console.log("STEP: redirected to version detail ->", finalUrl);
 
   const [, documentId, versionId] = finalUrl.match(/documents\/([^/]+)\/versions\/([^/]+)/);
