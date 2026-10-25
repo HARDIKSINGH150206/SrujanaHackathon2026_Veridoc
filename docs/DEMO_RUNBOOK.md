@@ -1,6 +1,6 @@
 # VeriDoc — Demo Runbook
 
-A click-by-click demo script, a one-command start, and what to do when the network or something else fails. It is written for the finished flow, and every step is marked **[built]** or **[planned]** (`PRD.md` section 8). Until a step is built, skip it or show the recorded screens, and say so. Never present a recording as live.
+A click-by-click demo script, a one-command start, and what to do when the network or something else fails. Every step is marked **[built]** or **[planned]** (`PRD.md` section 8). Skip a planned step or show recorded screens, and say so. Never present a recording as live.
 
 Demo data is synthetic: `samples/veridoc/` (a supply-order chat, a freelance chat, and `order-confirmation.pdf`).
 
@@ -54,13 +54,13 @@ Roughly 6 minutes. Accounts are the seeded demo accounts (`docs/digivault-archiv
 |---|---|---|---|---|
 | 1 | built | Show `samples/veridoc/chats/supply-order.txt` | A short chat in English and Hinglish: price per piece, a total, an advance, a delivery date | "A real-style deal on WhatsApp. Price, advance and date are all in there, scattered across messages. Synthetic data." |
 | 2 | built | Log in as the party account, **New agreement** | The empty agreement | "Nobody has to install anything on the other side." |
-| 3 | planned | **Import chat**, choose `supply-order.txt` | The chat shown back, messages numbered 1 to 10 | "VeriDoc numbers every message so every term can point at one." |
-| 4 | planned | Open **Terms** | Terms with a quote and message numbers each. The badge says "Demo mode: recorded model output" | "This model output is recorded, and the badge says so. The rules read the amounts and dates first." |
-| 5 | planned | Point at the price per notebook | The recorded model said 54 and quoted "₹45 per piece". The term shows **needs review**: the value 54 does not follow from the quote, and the page says so | "Models make mistakes. A term must quote the message verbatim and its value must follow from the quote. 54 does not, so a person has to look." |
-| 6 | planned | Click **Confirm** on each stated term | Terms turn confirmed. Nothing is saved until this click | "A person confirms every term. The AI only suggests." |
-| 7 | planned | Open **Flags**, then **Suggested message**, then **Use this** | Any term still unclear or missing is flagged with a reason; one suggested message is copied | "VeriDoc never sends a message. It tells you what to ask next." |
-| 8 | planned | **Create recap**, then **Copy for WhatsApp** | A short plain recap with `CONFIRM` and a 4-character code | "The recap is built from fixed templates, not free AI text." |
-| 9 | planned | Paste the prepared reply `CONFIRM <code>` | "Confirmed". Then paste a wrong code to show it refused | "The code ties a reply to this exact recap. It does not show who typed it." |
+| 3 | built | **Import chat**, choose `supply-order.txt` | The chat shown back, messages numbered 1 to 10 | "VeriDoc numbers every message so every term can point at one." |
+| 4 | built | Open **Terms** | Terms with a quote and message numbers each. The badge says "Demo mode: recorded model output" | "This model output is recorded, and the badge says so. The rules read the amounts and dates first." |
+| 5 | built | Point at the price per notebook | The recorded model said 54 and quoted "₹45 per piece". The term shows **needs review**: the value 54 does not follow from the quote, and the page says so | "Models make mistakes. A term must quote the message verbatim and its value must follow from the quote. 54 does not, so a person has to look." |
+| 6 | built | Click **Confirm** on each stated term | Terms turn confirmed. Nothing is saved until this click | "A person confirms every term. The AI only suggests." |
+| 7 | built | Click **Write the recap**, then on the Recap screen open **What to ask next**, pick a tone, **Copy this message** | The open points (the needs-review price, anything unclear or missing) each have one suggested message in three tones | "VeriDoc never sends a message. It tells you what to ask next." |
+| 8 | built | Choose an agreement, **Save recap and get the code**, then **Copy the WhatsApp message** | The recap saved through the normal upload, a 6-character code such as `4F7K9X`, and the WhatsApp message ending in the reply line | "The recap is built from fixed templates, not free AI text." |
+| 9 | built | In **Check a reply**, paste the prepared reply `CONFIRM <code>` | "Confirmed". Then paste a wrong code to show it refused | "The code ties a reply to this exact recap. It does not show who typed it." |
 | 10 | built | **Upload document**, choose `samples/veridoc/order-confirmation.pdf` (until step 4 of `TRIM_PLAN.md` builds the record automatically) | "Rendering pages and computing fingerprints in your browser", then the version page with the anchor pending | "The browser hashes every page. The server recomputes every hash and refuses a mismatch." |
 | 11 | built | Wait for **Anchored**, open the explorer link | The anchor transaction on Polygon Amoy | "Only a 32-byte fingerprint goes on chain. No content." |
 | 12 | built | Download the verification files, open the private window on `/verify`, drop them in | **Verified**, with each check listed | "Anyone can check this without an account and without our server." |
@@ -68,7 +68,7 @@ Roughly 6 minutes. Accounts are the seeded demo accounts (`docs/digivault-archiv
 | 14 | built | Redaction screen: show the suggested tiles, confirm, create the redacted version, make a share link | A new anchored version, and a link that serves only that version | "Names and numbers can be hidden before sharing, and the redacted copy is checkable too." |
 | 15 | built | Close on the receipt | | "Handshake, Recap, Receipt. Drafting aid, not legal advice." |
 
-Steps 3 to 9 are planned. If they are not built on the day, run steps 1, 2, 10 to 15 and say clearly that the chat analysis is not part of today's live demo.
+Steps 1 to 15 are built. Step 8 already saves the recap through the normal upload, so step 10 (uploading the sample PDF) is only needed if the recap steps are skipped. The terms and recap steps run on recorded model output; say so, as the badge does. They were run end to end in a browser on 2026-10-26.
 
 ## 5. Offline fallback
 

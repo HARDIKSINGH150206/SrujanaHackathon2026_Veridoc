@@ -8,7 +8,9 @@
  */
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiJson, ApiError } from "@/lib/client/api-client";
+import { saveDraft } from "@/lib/client/recap-draft";
 import type { FlagView, PlaybookView, TermStatus, TermView, TermsResponse } from "@/lib/terms";
 import { WorkspaceShell } from "./shell";
 
@@ -67,7 +69,7 @@ function toBase64(buf: ArrayBuffer): string {
   return btoa(bin);
 }
 
-function TermRow({ t, flags }: { t: TermView; flags: FlagView[] }) {
+function TermRow({ t, flags, confirmed, onToggle }: { t: TermView; flags: FlagView[]; confirmed: boolean; onToggle: (key: string) => void }) {
   return (
     <tr>
       <td>
@@ -77,6 +79,11 @@ function TermRow({ t, flags }: { t: TermView; flags: FlagView[] }) {
       <td>
         <span className="tv-cell-label">Status</span>
         <span className={`ws-chip ${STATUS_CLASS[t.status]}`}>{STATUS_LABEL[t.status]}</span>
+        {t.status === "stated" && t.value !== null && (
+          <label className="tv-confirm">
+            <input type="checkbox" checked={confirmed} onChange={() => onToggle(t.key)} aria-label={`Confirm ${t.label}`} /> Confirm
+          </label>
+        )}
       </td>
       <td>
         <span className="tv-cell-label">Value</span>
@@ -117,6 +124,8 @@ export function TermsView() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TermsResponse | null>(null);
+  const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
+  const router = useRouter();
 
   useEffect(() => {
     let live = true;
@@ -141,6 +150,7 @@ export function TermsView() {
     setBusy(true);
     setError(null);
     setResult(null);
+    setConfirmed(new Set());
     try {
       let body: { playbook_id: string; chat_text?: string; pdf_base64?: string };
       if (file && /\.pdf$/i.test(file.name)) body = { playbook_id: playbook, pdf_base64: toBase64(await file.arrayBuffer()) };
@@ -152,6 +162,33 @@ export function TermsView() {
     } finally {
       setBusy(false);
     }
+  }
+
+  const toggle = (key: string) =>
+    setConfirmed((cur) => {
+      const next = new Set(cur);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  function makeRecap() {
+    if (!result) return;
+    const senders = [...new Set(result.messages.filter((m) => m.kind === "message" && m.sender).map((m) => m.sender as string))];
+    saveDraft(window.sessionStorage, {
+      playbook_id: result.playbook_id,
+      demo_badge: result.demo_mode ? result.demo_badge : null,
+      senders,
+      terms: result.report.terms.map((t) => ({
+        key: t.key,
+        status: t.status,
+        value: t.value,
+        quote: t.quote,
+        msg: t.msg,
+        confirmed: t.status === "stated" && confirmed.has(t.key),
+      })),
+    });
+    router.push("/dashboard/recap");
   }
 
   const flagsFor = (key: string) => (result ? result.report.flags.filter((f) => f.term === key) : []);
@@ -215,10 +252,19 @@ export function TermsView() {
             </thead>
             <tbody>
               {result.report.terms.map((t) => (
-                <TermRow key={t.key} t={t} flags={flagsFor(t.key)} />
+                <TermRow key={t.key} t={t} flags={flagsFor(t.key)} confirmed={confirmed.has(t.key)} onToggle={toggle} />
               ))}
             </tbody>
           </table>
+
+          <div className="tv-actions">
+            <button type="button" className="ws-primary" onClick={makeRecap}>
+              Write the recap ({confirmed.size} confirmed)
+            </button>
+            <span className="tv-note" style={{ margin: 0 }}>
+              Only stated terms can be confirmed. Everything else becomes an open point in the recap.
+            </span>
+          </div>
 
           <h2 className="tv-h2">The chat, numbered</h2>
           <ol className="tv-msgs">

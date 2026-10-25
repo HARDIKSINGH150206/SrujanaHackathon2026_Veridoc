@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 
 from .model_adapter import adapter_from_env
 from .real_suggestions import generate_suggestions
+from .recap_router import router as recap_router
 from .schemas import SuggestionRequest, SuggestionResponse
 from .terms_router import router as terms_router
 
@@ -24,6 +25,7 @@ app = FastAPI(title="DigiVault AI Service", lifespan=lifespan, description=(
 )
 
 app.include_router(terms_router)
+app.include_router(recap_router)
 
 
 @app.get("/health")

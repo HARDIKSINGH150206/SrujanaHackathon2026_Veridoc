@@ -30,12 +30,13 @@ Inherited from DigiVault and working (`docs/digivault-archive/DEVELOPMENT.md` ha
 | Chat parser, text-PDF reader (`pypdf`) | `apps/ai-service/app/chat_import.py` | Built |
 | Term extractor with grounding, value check and rule flags | `apps/ai-service/app/term_extractor.py` | Built (rules for amounts, dates and the seven flags; number words not yet) |
 | Terms endpoints | `apps/ai-service/app/terms_router.py`, `apps/web/src/app/api/v1/evidence/terms/route.ts`, `apps/web/src/lib/terms.ts`; plus `GET /v1/playbooks` and `GET /api/v1/evidence/playbooks` | Built |
-| Terms screen | `apps/web/src/app/dashboard/terms/page.tsx`, `_workspace/terms-view.tsx` | Built, checked in a browser |
-| Recommendation | `apps/ai-service/app/suggestion.py` | Planned |
-| Recap, echo code | `apps/ai-service/app/recap.py` | Planned |
+| Terms screen | `apps/web/src/app/dashboard/terms/page.tsx`, `_workspace/terms-view.tsx` (playbook list loaded from the endpoint) | Built, checked in a browser |
+| Recap and suggested messages from fixed templates | `apps/ai-service/app/recap.py`, `recap_router.py`, `playbooks/recap/*.json`; proxy `apps/web/src/app/api/v1/evidence/recap/route.ts`, `apps/web/src/lib/recap.ts` | Built |
+| Echo code and reply check | `apps/web/src/lib/echo-code.ts` | Built |
+| Recap PDF (embedded font, Hindi shaped) | `apps/web/src/lib/recap-pdf.ts`, `apps/web/public/fonts/` | Built |
+| Recap screen, confirm boxes on Chat terms | `apps/web/src/app/dashboard/recap/page.tsx`, `_workspace/recap-view.tsx` | Built, checked in a browser |
 | Playbooks (JSON, no code) | `playbooks/` (path set by `PLAYBOOK_DIR`) | Built (two) |
-| Message templates | `playbooks/` | Planned |
-| Confirm and recap screens | `apps/web/src/app/dashboard/_workspace/` | Planned |
+| Recap and suggestion templates | `playbooks/recap/` | Built |
 | Chat record builder (chat to PDF in the browser, then the normal upload) | `apps/web` | Planned (ADR-040, accepted) |
 
 Python libraries added: `pypdf` (text PDFs) and `httpx` (route tests). The rules use only the standard library; `dateparser` and `rapidfuzz` are not used.

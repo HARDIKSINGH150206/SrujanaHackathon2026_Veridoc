@@ -210,7 +210,8 @@ No chat text, transcript or name goes into a log. Logs may hold durations, the m
 | `POST /v1/terms` and `GET /v1/playbooks` in the AI service, `POST /api/v1/evidence/terms` and `GET /api/v1/evidence/playbooks` in the web app, `/dashboard/terms` page (lists the playbooks from the service) | Built. Run in a browser (Chromium, desktop and phone width) on the supply-order sample |
 | Rules that find a term the model missed (for example the freelance advance) | Not built. The recorded miss still shows as missing |
 | Number words ("pachaas hazaar"), Hindi month names | Not built |
-| Recommendation, recap, echo code | Not built |
+| Recommendation (three tones), recap text, open points: fixed templates, no model text (`docs/RECAP_DESIGN.md`) | Built, tested |
+| Echo code | Built (web side, `echo-code.ts`) |
 | Injection: a message that tells the AI what to do makes its terms needs_review | Built (one pattern set, tested). The wider fixture set is not built |
 | Local model | Stub. No model is chosen or pinned |
 

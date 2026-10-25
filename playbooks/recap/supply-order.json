@@ -1,0 +1,194 @@
+{
+  "_comment": "Fixed recap and message templates. Filled only from confirmed terms; no model text. The Hindi wording is a draft and has not been reviewed by a native speaker.",
+  "playbook_id": "supply-order",
+  "languages": {
+    "en": {
+      "title": "Summary of what we agreed",
+      "intro": "Hi {other_name}, just confirming what we agreed so far:",
+      "intro_anon": "Hi, just confirming what we agreed so far:",
+      "none_confirmed": "Nothing has been confirmed yet.",
+      "open_title": "Still to settle:",
+      "no_open": "Nothing else is open.",
+      "open": {
+        "unclear": "{label}: not clear yet.",
+        "contradicted": "{label}: said in two different ways.",
+        "missing": "{label}: not discussed yet.",
+        "needs_review": "{label}: still to be checked.",
+        "unconfirmed": "{label}: not confirmed yet."
+      },
+      "reply_line": "If all correct, reply: CONFIRM {code}",
+      "disclaimer": "Drafting aid, not legal advice.",
+      "months": [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+      ],
+      "greeting": "Hi {other_name},",
+      "greeting_anon": "Hi,",
+      "terms": {
+        "parties": {
+          "label": "Parties",
+          "line": "Between {value}"
+        },
+        "quantity": {
+          "label": "Quantity",
+          "line": "Quantity: {value}"
+        },
+        "unit_price": {
+          "label": "Price per piece",
+          "line": "Price per piece: {value}"
+        },
+        "total_price": {
+          "label": "Order total",
+          "line": "Order total: {value}"
+        },
+        "advance": {
+          "label": "Advance paid",
+          "line": "Advance paid: {value}"
+        },
+        "balance": {
+          "label": "Balance due",
+          "line": "Balance due: {value}"
+        },
+        "deadline": {
+          "label": "Delivery date",
+          "line": "Delivery by {value}"
+        },
+        "inclusion": {
+          "label": "What is included at no extra charge",
+          "line": "Included at no extra charge: {value}"
+        }
+      },
+      "suggest": {
+        "missing": {
+          "friendly": "{greeting} one thing we have not talked about yet: {label}. What works for you?",
+          "neutral": "{label} has not been discussed. Please tell me what you propose.",
+          "firm": "We still need to settle {label}. Please reply with your answer today so we are both clear."
+        },
+        "unclear": {
+          "friendly": "{greeting} you mentioned \"{quote}\" for {label}. Could we fix an exact answer?",
+          "neutral": "Regarding {label}: \"{quote}\" is not exact. Please confirm the exact details.",
+          "firm": "\"{quote}\" for {label} is not specific enough. Please give the exact details so we can close this."
+        },
+        "contradicted": {
+          "friendly": "{greeting} I see two different things for {label}: \"{quote}\" and \"{quote2}\". Which one is right?",
+          "neutral": "{label} is stated as \"{quote}\" and as \"{quote2}\". Please confirm which one applies.",
+          "firm": "{label} was said in two ways: \"{quote}\" and \"{quote2}\". Please confirm one answer today."
+        },
+        "check": {
+          "friendly": "{greeting} just checking: {label} is {value}, right?",
+          "neutral": "Please confirm {label}: {value}.",
+          "firm": "Please confirm {label}: {value}, so we can record it."
+        },
+        "review": {
+          "friendly": "{greeting} I read \"{quote}\" for {label}. Can you confirm that is right?",
+          "neutral": "For {label} I have \"{quote}\". Please confirm that is correct.",
+          "firm": "For {label} I have \"{quote}\". Please confirm it is correct so we can record it."
+        }
+      }
+    },
+    "hi": {
+      "title": "हमने जो तय किया उसका सार",
+      "intro": "नमस्ते {other_name}, अब तक हमने यह तय किया है:",
+      "intro_anon": "नमस्ते, अब तक हमने यह तय किया है:",
+      "none_confirmed": "अभी कुछ पक्का नहीं हुआ है।",
+      "open_title": "अभी तय होना बाकी है:",
+      "no_open": "और कुछ बाकी नहीं है।",
+      "open": {
+        "unclear": "{label}: अभी साफ़ नहीं है।",
+        "contradicted": "{label}: दो अलग तरह से कहा गया है।",
+        "missing": "{label}: अभी बात नहीं हुई।",
+        "needs_review": "{label}: अभी जाँचना बाकी है।",
+        "unconfirmed": "{label}: अभी पक्का नहीं किया गया।"
+      },
+      "reply_line": "अगर सब सही है तो जवाब दें: CONFIRM {code}",
+      "disclaimer": "मसौदा बनाने में सहायता, कानूनी सलाह नहीं।",
+      "months": [
+        "जनवरी",
+        "फ़रवरी",
+        "मार्च",
+        "अप्रैल",
+        "मई",
+        "जून",
+        "जुलाई",
+        "अगस्त",
+        "सितंबर",
+        "अक्टूबर",
+        "नवंबर",
+        "दिसंबर"
+      ],
+      "greeting": "नमस्ते {other_name},",
+      "greeting_anon": "नमस्ते,",
+      "terms": {
+        "parties": {
+          "label": "पक्ष",
+          "line": "पक्ष: {value}"
+        },
+        "quantity": {
+          "label": "मात्रा",
+          "line": "मात्रा: {value}"
+        },
+        "unit_price": {
+          "label": "प्रति नग कीमत",
+          "line": "प्रति नग कीमत: {value}"
+        },
+        "total_price": {
+          "label": "कुल राशि",
+          "line": "कुल राशि: {value}"
+        },
+        "advance": {
+          "label": "एडवांस",
+          "line": "एडवांस: {value}"
+        },
+        "balance": {
+          "label": "बाकी राशि",
+          "line": "बाकी राशि: {value}"
+        },
+        "deadline": {
+          "label": "डिलीवरी की तारीख",
+          "line": "डिलीवरी {value} तक"
+        },
+        "inclusion": {
+          "label": "बिना अतिरिक्त शुल्क शामिल",
+          "line": "बिना अतिरिक्त शुल्क शामिल: {value}"
+        }
+      },
+      "suggest": {
+        "missing": {
+          "friendly": "{greeting} एक बात पर हमने अभी बात नहीं की: {label}। आपको क्या ठीक रहेगा?",
+          "neutral": "{label} पर बात नहीं हुई है। कृपया बताइए आपका क्या प्रस्ताव है।",
+          "firm": "{label} अभी तय होना बाकी है। कृपया आज ही अपना जवाब भेजें ताकि हम दोनों साफ़ रहें।"
+        },
+        "unclear": {
+          "friendly": "{greeting} आपने {label} के लिए \"{quote}\" कहा था। क्या हम इसे सही-सही तय कर लें?",
+          "neutral": "{label} के बारे में: \"{quote}\" सही-सही नहीं है। कृपया पूरी जानकारी पक्की करें।",
+          "firm": "{label} के लिए \"{quote}\" काफ़ी साफ़ नहीं है। कृपया पूरी जानकारी दें ताकि हम इसे पूरा कर सकें।"
+        },
+        "contradicted": {
+          "friendly": "{greeting} {label} के लिए मुझे दो अलग बातें दिख रही हैं: \"{quote}\" और \"{quote2}\"। कौन-सी सही है?",
+          "neutral": "{label} को \"{quote}\" और \"{quote2}\" दोनों तरह से कहा गया है। कृपया बताइए कौन-सी लागू है।",
+          "firm": "{label} दो तरह से कहा गया: \"{quote}\" और \"{quote2}\"। कृपया आज एक ही जवाब पक्का करें।"
+        },
+        "check": {
+          "friendly": "{greeting} बस पूछ रहा/रही हूँ: {label} {value} है, ठीक?",
+          "neutral": "कृपया {label} पक्का करें: {value}।",
+          "firm": "कृपया {label} पक्का करें: {value}, ताकि हम इसे दर्ज कर सकें।"
+        },
+        "review": {
+          "friendly": "{greeting} {label} के लिए मैंने \"{quote}\" पढ़ा। क्या यह सही है?",
+          "neutral": "{label} के लिए मेरे पास \"{quote}\" है। कृपया पक्का करें कि यह सही है।",
+          "firm": "{label} के लिए मेरे पास \"{quote}\" है। कृपया इसे पक्का करें ताकि हम इसे दर्ज कर सकें।"
+        }
+      }
+    }
+  }
+}
