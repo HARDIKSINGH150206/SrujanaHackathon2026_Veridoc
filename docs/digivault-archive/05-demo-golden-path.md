@@ -1,6 +1,6 @@
 # 05 — Demo Golden Path
 
-The one live demo sequence: what to prepare, what to click, what the audience should see, and what to do when something breaks. CLAUDE.md build step 7 runs this end to end. It replaces the draft in `docs/06` §10.
+The one live demo sequence: what to prepare, what to click, what the audience should see, and what to do when something breaks. CLAUDE.md build step 7 runs this end to end. It replaces the draft in `docs/digivault-archive/06` §10.
 
 Every "Verified" or "Anchored" on screen comes from a real check against Polygon Amoy; nothing is mocked. Target length: **about 8 minutes**, plus 2 minutes of questions.
 

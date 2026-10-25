@@ -2,7 +2,7 @@
 
 You are working on **VeriDoc**, our Srujana Hackathon project for problem LS-06, *From Handshake to Contract* (informal agreements between two people): a WhatsApp chat or voice notes go in; a verified plain-language recap and a tamper-evident receipt come out. It is built on **DigiVault**, our own earlier project, imported with the organiser's approval (`docs/PRIOR_WORK.md`, ADR-036).
 
-Before writing any code read `docs/PRD.md`, `docs/ARCHITECTURE.md` and `docs/AI_SPEC.md`, then `docs/02-architecture-and-dataflow.md` and `docs/03-crypto-and-merkle-spec.md`. They explain *why* the rules below exist, not just what they are. `docs/01`, `04`, `05`, `06`, `07`, `08` and `docs/DEVELOPMENT.md` are DigiVault documents: they describe the inherited vault and redaction engine accurately but keep their original police and court wording, which does not apply to VeriDoc. `docs/TRIM_PLAN.md` says what is kept, renamed and removed.
+Before writing any code read `docs/PRD.md`, `docs/ARCHITECTURE.md` and `docs/AI_SPEC.md`, then `docs/02-architecture-and-dataflow.md` and `docs/03-crypto-and-merkle-spec.md`. They explain *why* the rules below exist, not just what they are. Everything in `docs/digivault-archive/` is a pre-event DigiVault document (the old problem statement, API spec, demo path, frontend plan, v2 build plan, redaction measurements and developer guide). It describes the inherited vault and redaction engine accurately but keeps its original police and court wording, which does not apply to VeriDoc. `docs/TRIM_PLAN.md` says what is kept, renamed and removed.
 
 ## Absolute rules — never violate these
 

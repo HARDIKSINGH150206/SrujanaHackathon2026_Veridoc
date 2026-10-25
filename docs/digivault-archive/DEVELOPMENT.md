@@ -89,10 +89,10 @@ cd apps/web && node --experimental-strip-types prisma/seed-demo.ts
 | Unit tests (Vitest, crypto-core + web) | `pnpm test` |
 | AI service unit tests | `cd apps/ai-service && .venv/bin/python -m unittest discover -s tests -t .` |
 | Redaction boxes + gazetteer in the real UI (both services, `GAZETTEER_KEY` set, test set generated; ~0.028 POL) | `cd apps/web && node scripts/e2e-redaction-boxes.mjs` |
-| Demo golden path, scripted rehearsal (docs/05; both services, seeds run; ~0.008 POL) | `cd apps/web && node scripts/golden-path.mjs` (`GOLDEN_PDF=…` for another file) |
+| Demo golden path, scripted rehearsal (docs/digivault-archive/05; both services, seeds run; ~0.008 POL) | `cd apps/web && node scripts/golden-path.mjs` (`GOLDEN_PDF=…` for another file) |
 | Same hashes in Chromium, Firefox and WebKit (vectors + a golden-path run's files; no gas; WebKit needs `libevent-2.1-7t64` and `libmanette-0.2-0` on Ubuntu) | `cd apps/web && node scripts/e2e-three-browsers.mjs [files-dir]` (`E2E_ENGINES=chromium,firefox` for a subset) |
 | Regenerate the demo's messy scan | `cd apps/ai-service && .venv/bin/python -m eval.messy` |
-| Redaction recall + gazetteer (both test sets, ~6 min, no services needed) | `pnpm eval:redaction` — results in `docs/08`; misses in `apps/ai-service/eval/out/**/results.json` |
+| Redaction recall + gazetteer (both test sets, ~6 min, no services needed) | `pnpm eval:redaction` — results in `docs/digivault-archive/08`; misses in `apps/ai-service/eval/out/**/results.json` |
 | Redaction quality gate (after `eval:redaction`; also in CI) | `pnpm eval:gate` — fails if recall drops at all or precision by > 2 points; `cd apps/ai-service && .venv/bin/python -m eval.gate --update` only for a deliberate improvement |
 | Regenerate proof-format v2 test vectors | `node packages/crypto-core/reference/gen-vectors.mjs` — only when the spec in `docs/03` §v2 deliberately changes; the vectors pin it |
 | Verify the audit-log hash chain | `pnpm audit:verify` (exit 1 names the first broken `seq`); add `--onchain` to also check every anchored audit head and the legacy-rows anchor on Polygon (a rewrite with recomputed hashes is located between two anchored heads) |
@@ -121,7 +121,7 @@ The smoke and e2e scripts need the web app running (and the AI service for parts
 
 - Source: `packages/contracts/contracts/`. Deployment records: `packages/contracts/deployments/*.json`.
 - Two contracts (ADR-028): `EvidenceAnchorV2` (`deployments/amoy-v2.json`) receives every anchor; `EvidenceAnchor` v1 (`deployments/amoy.json`) is legacy and read-only. `lib/contract-address.ts` reads both.
-- After a redeploy, update together: the deployment JSON, the hardcoded constants in `apps/web/src/app/verify/page.tsx` (`CONTRACT_V2`, `LEGACY_V1_*`), the README and `docs/04` §5.
+- After a redeploy, update together: the deployment JSON, the hardcoded constants in `apps/web/src/app/verify/page.tsx` (`CONTRACT_V2`, `LEGACY_V1_*`), the README and `docs/digivault-archive/04` §5.
 - Key rotation needs no redeploy: `addAnchorer(new)`, then `removeAnchorer(old)` (retire). For a stolen key use `revokeAnchorer(old, compromisedSince)`, which also distrusts its anchors from that time.
 - Cap gas fees in anchoring code; check the wallet balance before demos.
 
@@ -132,7 +132,7 @@ The smoke and e2e scripts need the web app running (and the AI service for parts
 - **AI service**: output is suggestions only; never import it into hashing code.
 - **PNG only**: never JPEG on the evidence path.
 - **Audit**: every sensitive read/write goes through `writeAuditLog`.
-- Specs first: when behaviour in `docs/03` or `docs/04` changes, update the doc in the same branch; record non-obvious choices in `docs/DECISIONS.md`.
+- Specs first: when behaviour in `docs/03` or `docs/digivault-archive/04` changes, update the doc in the same branch; record non-obvious choices in `docs/DECISIONS.md`.
 
 ## 8. Git workflow
 

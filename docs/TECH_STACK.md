@@ -4,7 +4,7 @@ What runs today, what we add, and what is still only planned. Anything in "plann
 
 ## 1. The stack as it is
 
-Inherited from DigiVault and working (`docs/DEVELOPMENT.md` has the commands).
+Inherited from DigiVault and working (`docs/digivault-archive/DEVELOPMENT.md` has the commands).
 
 | Layer | Technology | Notes |
 |---|---|---|
