@@ -638,19 +638,19 @@ export default function VerifyPage() {
         <Link href="/" className="vf-home">
           <BrandMark size={26} />
           <div>
-            <div className="vf-brand-name">DigiVault</div>
+            <div className="vf-brand-name">VeriDoc</div>
             <div className="vf-brand-sub">Public verification</div>
           </div>
         </Link>
         <Link href="/" className="vf-header-link">
-          About DigiVault
+          About VeriDoc
         </Link>
       </header>
 
       <main className="vf-main">
-        <p className="vf-eyebrow">Public court verification</p>
-        <h1 className="vf-title">Court Document Verification</h1>
-        <p className="vf-lede">Independent verification - no account required, no connection to DigiVault servers.</p>
+        <p className="vf-eyebrow">Public verification</p>
+        <h1 className="vf-title">Record Verification</h1>
+        <p className="vf-lede">Independent verification - no account required, no connection to VeriDoc servers.</p>
 
         {certParams && certResult && (
           <div

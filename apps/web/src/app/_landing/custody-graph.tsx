@@ -43,10 +43,10 @@ type InputDef = {
 };
 
 const INPUTS: InputDef[] = [
-  { id: "file", row: 0, title: "Case file", icon: "file", port: "pages", color: "#f0b24a", hubLabel: "Page images", lines: ["FIR_2026_1123.pdf", "6 pages · scanned 300 dpi"] },
+  { id: "file", row: 0, title: "Agreement record", icon: "file", port: "pages", color: "#f0b24a", hubLabel: "Page images", lines: ["recap-2026-1123.pdf", "6 pages"] },
   { id: "hash", row: 1, title: "Browser hash", icon: "fingerprint", port: "root", color: "#ef7a45", hubLabel: "Merkle root", lines: ["20 × 20 tiles per page", "SHA-256 on raw pixels"] },
   { id: "server", row: 2, title: "Server re-check", icon: "server", port: "match", color: "#e8578f", hubLabel: "Server match", chips: ["recompute", "compare", "409 on mismatch"] },
-  { id: "officer", row: 3, title: "Officer sign-off", icon: "user-check", port: "consent", color: "#9b87f5", hubLabel: "Officer sign-off", note: "Mask 3 tiles on page 2. Confirmed with PIN step-up." },
+  { id: "officer", row: 3, title: "Your sign-off", icon: "user-check", port: "consent", color: "#9b87f5", hubLabel: "Your sign-off", note: "Mask 3 tiles on page 2. Confirmed with PIN step-up." },
 ];
 
 type OutputDef = { id: CardId; title: string; icon: LpIconName; lines: [string, string]; wait: string; live: string; hubRow?: number };
@@ -56,7 +56,7 @@ const OUTPUTS: OutputDef[] = [
   { id: "polygon", hubRow: 1, title: "Polygon Amoy", icon: "chain", lines: ["EvidenceAnchor.sol", "Chain 80002"], wait: "Waiting for seal", live: "Root anchored" },
   { id: "audit", hubRow: 2, title: "Audit log", icon: "list", lines: ["Append-only", "Every view and download"], wait: "Waiting for seal", live: "Recording" },
   { id: "share", hubRow: 3, title: "Share link", icon: "link", lines: ["Redacted version only", "Expires, revocable, view cap"], wait: "Waiting for seal", live: "Link ready" },
-  { id: "court", title: "Court portal", icon: "scale", lines: ["/verify · public", "No login, no database"], wait: "Waiting for anchors", live: "Anyone can verify" },
+  { id: "court", title: "Verify page", icon: "scale", lines: ["/verify · public", "No login, no database"], wait: "Waiting for anchors", live: "Anyone can verify" },
 ];
 
 const START: Record<CardId, Pt> = {
@@ -319,10 +319,10 @@ export function CustodyGraph() {
         <div className="lp-g-intro">
           <div>
             <h2 id="lp-custody" className="lp-h2 lp-h2-tight">
-              Wire up a chain of custody in a minute
+              Wire up a hash chain in a minute
             </h2>
             <p className="lp-sub">
-              Connect the case file, the browser hash, the server check and the officer&apos;s sign-off. DigiVault seals the version and anchors
+              Connect the agreement record, the browser hash, the server check and your sign-off. VeriDoc seals the version and anchors
               it twice.
             </p>
           </div>
@@ -394,7 +394,7 @@ export function CustodyGraph() {
           ))}
         </ul>
         <p className="lp-g-mnote">
-          <LpIcon name="sparkles" size={14} /> AI suggestions reach the officer, never the hash.
+          <LpIcon name="sparkles" size={14} /> AI suggestions reach you, never the hash.
         </p>
       </div>
 

@@ -121,7 +121,11 @@ const VERSION_CSS = `
 const CONFIDENCE_GREEN = 0.9;
 const isHigh = (score: number) => score >= CONFIDENCE_GREEN;
 
+/** Labels only: the stored entity type values (for example "victim_name") do not change. */
+const ENTITY_LABELS: Record<string, string> = { victim_name: "Person name" };
+
 function humanEntity(entity: string): string {
+  if (ENTITY_LABELS[entity]) return ENTITY_LABELS[entity];
   return entity.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 }
 
@@ -338,7 +342,7 @@ export function WorkspaceVersionView() {
     setMessage(null);
     let headers: Record<string, string> | null;
     try {
-      headers = await stepUpHeaders("generate the BSA certificate");
+      headers = await stepUpHeaders("generate the certificate");
     } catch (err) {
       setMessage({ kind: "error", text: err instanceof Error ? err.message : String(err) });
       return;
@@ -350,7 +354,7 @@ export function WorkspaceVersionView() {
       setMessage({ kind: "error", text: body?.message ?? `Could not generate the certificate (${res.status}).` });
       return;
     }
-    triggerDownload(await res.blob(), `bsa-certificate-v${info?.version_no}.pdf`);
+    triggerDownload(await res.blob(), `certificate-v${info?.version_no}.pdf`);
   }
 
   return (
@@ -361,7 +365,7 @@ export function WorkspaceVersionView() {
         </Link>
       ) : (
         <Link href="/dashboard" className="ws-crumb">
-          <Icon name="back" size={18} /> Cases
+          <Icon name="back" size={18} /> Agreements
         </Link>
       )}
 
@@ -390,7 +394,7 @@ export function WorkspaceVersionView() {
           </div>
           {!info.is_current_version && (
             <p className="ws-note">
-              <Icon name="info" size={18} /> A newer version of this document exists. Open the case to see the current version.
+              <Icon name="info" size={18} /> A newer version of this document exists. Open the agreement to see the current version.
             </p>
           )}
           {message && <p className={message.kind === "ok" ? "ws-success" : "ws-alert"} role={message.kind === "ok" ? "status" : "alert"}>{message.text}</p>}
@@ -599,7 +603,7 @@ export function WorkspaceVersionView() {
                     <Icon name="download" size={18} /> Download certificate
                   </button>
                   <p className="ws-row-note" style={{ margin: "-4px 0 4px" }}>
-                    BSA s.63 certificate, pre-filled with this version&apos;s record. Unsigned until the officer and the expert sign it.
+                    Certificate pre-filled with this version&apos;s record. It is unsigned.
                     {info.public_verify_url ? (
                       <>
                         {" "}Its QR code opens{" "}

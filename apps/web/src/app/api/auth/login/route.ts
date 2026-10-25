@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000;
-const INVALID = { error: "UNAUTHENTICATED", message: "Invalid service number or PIN" } as const;
+const INVALID = { error: "UNAUTHENTICATED", message: "Invalid sign-in ID or PIN" } as const;
 
 // Compared against when the service number doesn't exist, so a wrong
 // service number costs the same bcrypt time as a wrong PIN.

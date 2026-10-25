@@ -7,6 +7,17 @@ Ground rules (ADR-037, ADR-039):
 - No Prisma migration, no change to a hash, a proof format or an audit format.
 - The front end and the redaction screens (tiles, preview, confirm, share link, verify page) stay as they are.
 
+## Status
+
+**Step 1 (wording and seed data) is done** on branch `feat/veridoc-wording`: "case" reads "agreement" on every screen and in the messages the screens show; roles show as Party, Reviewer, Verifier and Admin; the landing, login, header and verify page no longer name NCRB, police, courts or the old case-file vocabulary; "victim_name" shows as "Person name"; the BNSS deadline badges, alerts and FIR fields are gone from the screens; both seed scripts use the synthetic VeriDoc samples (`prisma/seed-demo.ts` seeds two agreements and three documents from `samples/veridoc/`). Checked by reading the visible text of every page for every role in a browser, and by `e2e-part1.mjs`.
+
+Still to do, in later steps:
+- The certificate PDF still carries the BSA s.63 wording (`certificate.ts`, `certificate-text.ts` and their test); the screens call it "certificate" and the download file is `certificate-v<n>.pdf`. Step 6 replaces it with a receipt.
+- The BNSS deadline code is unused by the screens but still exists (`lib/bnss-deadline.ts`, `_workspace/deadline.tsx`, the API fields, the `fir_registered_at` and `offence_sections` columns). `scripts/e2e-deadlines.mjs` and `scripts/seed-deadline-cases.mjs` test and seed it and are obsolete.
+- The verify page still says "official DigiVault contract" in its trust messages. That is the name of the deployed anchor, and the demo scripts look for it.
+- Code comments, the AI service's entity type names and redaction eval fixtures still use the old vocabulary.
+- `docs/digivault-archive/` keeps the original wording.
+
 ## 1. Keep, unchanged
 
 | Keep | Why |

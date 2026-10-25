@@ -15,8 +15,8 @@ import path from "node:path";
 import { BASE, login as uiLogin, logBrowserErrors } from "./e2e-helpers.mjs";
 import { DEADLINE_CASES, istDaysAgo, login, seedDeadlineCases } from "./seed-deadline-cases.mjs";
 
-const COURT_OFFICIAL = { serviceNumber: "MH/2020/5512", pin: "334455" };
-const ADMIN = { serviceNumber: "NCRB/2018/0001", pin: "556677" };
+const COURT_OFFICIAL = { serviceNumber: "TEST-REVIEWER", pin: "334455" };
+const ADMIN = { serviceNumber: "TEST-ADMIN", pin: "556677" };
 
 async function call(method, pathname, token, body) {
   const res = await fetch(`${BASE}${pathname}`, {

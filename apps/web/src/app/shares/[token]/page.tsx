@@ -17,9 +17,9 @@ function shortHash(value: string): string {
 
 const ERROR_MESSAGES: Record<string, { title: string; detail: string }> = {
   NOT_FOUND: { title: "Link not found", detail: "Check that the full link was copied." },
-  REVOKED: { title: "This link has been revoked", detail: "Ask the officer who shared it for a new link." },
-  EXPIRED: { title: "This link has expired", detail: "Ask the officer who shared it for a new link." },
-  EXHAUSTED: { title: "This link has reached its view limit", detail: "Ask the officer who shared it for a new link." },
+  REVOKED: { title: "This link has been revoked", detail: "Ask the person who shared it for a new link." },
+  EXPIRED: { title: "This link has expired", detail: "Ask the person who shared it for a new link." },
+  EXHAUSTED: { title: "This link has reached its view limit", detail: "Ask the person who shared it for a new link." },
 };
 
 /* Same rule as the other pages: no quote, ampersand or angle-bracket characters inside this CSS. */
@@ -73,12 +73,12 @@ function Frame({ children }: { children: React.ReactNode }) {
       <header className="sh-header">
         <BrandMark size={30} />
         <div>
-          <div className="sh-brand">DigiVault</div>
+          <div className="sh-brand">VeriDoc</div>
           <div className="sh-brand-sub">Shared document</div>
         </div>
       </header>
       <main className="sh-main">{children}</main>
-      <footer className="sh-footer">Shared via DigiVault</footer>
+      <footer className="sh-footer">Shared via VeriDoc</footer>
     </div>
   );
 }
@@ -157,7 +157,7 @@ export default async function SharedDocumentPage({ params }: { params: { token: 
       </section>
 
       <p className="sh-help">
-        This copy has the areas confirmed by the officer blacked out. To check that nothing else was changed, download the verification files and add
+        This copy has the areas confirmed by the person who shared it blacked out. To check that nothing else was changed, download the verification files and add
         them on the <Link href="/verify">verification page</Link>. It compares the page images with the original document&apos;s public blockchain
         record without revealing what was blacked out.
       </p>

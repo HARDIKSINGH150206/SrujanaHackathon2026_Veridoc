@@ -12,7 +12,17 @@ import { useAuth } from "@/lib/client/auth-context";
 import { fontClass } from "@/lib/client/fonts";
 import { humanizeCode } from "./data";
 
+/** Labels only (ADR-037): the Role enum values do not change. */
+const ROLE_LABELS: Record<string, string> = {
+  POLICE_OFFICER: "Party",
+  INVESTIGATING_OFFICER: "Party",
+  COURT_OFFICIAL: "Reviewer",
+  FORENSIC_LAB: "Verifier",
+  ADMIN: "Admin",
+};
+
 export function roleLabel(role: string): string {
+  if (ROLE_LABELS[role]) return ROLE_LABELS[role];
   return role
     .toLowerCase()
     .split("_")
@@ -20,12 +30,11 @@ export function roleLabel(role: string): string {
     .join(" ");
 }
 
-/** "Good morning, Officer." — the session carries no name, only the role. */
+/** "Good morning." — the session carries no name, only the role. */
 export function greeting(role: string): string {
   const h = new Date().getHours();
   const period = h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
-  const title = role === "POLICE_OFFICER" || role === "INVESTIGATING_OFFICER" ? "Officer" : role === "FORENSIC_LAB" ? "Examiner" : null;
-  return title ? `Good ${period}, ${title}.` : `Good ${period}.`;
+  return `Good ${period}.`;
 }
 
 export function relativeTime(iso: string): string {
@@ -271,7 +280,7 @@ a.ws-row:hover { background: var(--ink-3); }
 export function WorkspaceShell({ active, extraCss, children }: { active: "cases" | "audit" | "terms" | null; extraCss?: string; children: React.ReactNode }) {
   const { session, logout } = useAuth();
   const role = session?.role ?? "";
-  const initials = role.split("_").map((w) => w.charAt(0)).join("").slice(0, 2);
+  const initials = roleLabel(role).slice(0, 2).toUpperCase();
 
   return (
     <div className={`ws ${fontClass}`}>
@@ -280,8 +289,8 @@ export function WorkspaceShell({ active, extraCss, children }: { active: "cases"
         <Link href="/dashboard" className="ws-brand">
           <BrandMark size={26} />
           <div>
-            <div className="ws-brand-name">DigiVault</div>
-            <div className="ws-brand-sub">NCRB · Women Safety Division</div>
+            <div className="ws-brand-name">VeriDoc</div>
+            <div className="ws-brand-sub">From handshake to contract</div>
           </div>
         </Link>
         <div className="ws-user">
@@ -300,7 +309,7 @@ export function WorkspaceShell({ active, extraCss, children }: { active: "cases"
           <p className="ws-side-label">Workspace</p>
           <nav className="ws-nav" aria-label="Main">
             <Link href="/dashboard" className={active === "cases" ? "ws-nav-active" : undefined} aria-current={active === "cases" ? "page" : undefined}>
-              <Icon name="home" /> Cases
+              <Icon name="home" /> Agreements
             </Link>
             {(role === "POLICE_OFFICER" || role === "INVESTIGATING_OFFICER" || role === "ADMIN") && (
               <Link href="/dashboard/terms" className={active === "terms" ? "ws-nav-active" : undefined} aria-current={active === "terms" ? "page" : undefined}>

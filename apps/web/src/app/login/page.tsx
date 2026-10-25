@@ -128,7 +128,7 @@ const RECORD: { label: string; value: string; mono?: boolean; ok?: boolean }[] =
   { label: "Tiles", value: "6 pages · 20 × 20 grid" },
   { label: "MinIO Object Lock", value: "Retained · compliance mode", ok: true },
   { label: "Polygon Amoy", value: "Anchored · chain 80002", ok: true },
-  { label: "Signed off by", value: "Investigating officer" },
+  { label: "Saved by", value: "Party" },
 ];
 
 export default function LoginPage() {
@@ -153,7 +153,7 @@ export default function LoginPage() {
       await login(serviceNumber.trim(), pin);
       router.push("/dashboard");
     } catch (err) {
-      // 401 (wrong service number or PIN) and 429 (rate limited) carry a message meant for the user.
+      // 401 (wrong sign-in ID or PIN) and 429 (rate limited) carry a message meant for the user.
       setError(err instanceof ApiError && (err.status === 401 || err.status === 429) ? err.message : "Sign-in failed. Please try again.");
     } finally {
       setSubmitting(false);
@@ -170,7 +170,7 @@ export default function LoginPage() {
         <header className="lg-top">
           <Link href="/" className="lg-brand">
             <BrandMark size={22} />
-            DigiVault
+            VeriDoc
           </Link>
           <Link href="/" className="lg-back">
             <LpIcon name="back" size={16} />
@@ -180,17 +180,17 @@ export default function LoginPage() {
 
         <div className="lg-center">
           <section className="lg-form-wrap" aria-labelledby="lg-title">
-            <p className="lg-kicker">NCRB · Women Safety Division</p>
+            <p className="lg-kicker">From handshake to contract</p>
             <h1 id="lg-title" className="lg-title">
-              Sign in to DigiVault
+              Sign in to VeriDoc
             </h1>
-            <p className="lg-sub">For authorised investigating officers and staff. Use the service number and PIN issued to you.</p>
+            <p className="lg-sub">Use the sign-in ID and PIN issued to you.</p>
 
             <form onSubmit={handleSubmit} className="lg-form" aria-busy={submitting} noValidate>
               <div>
                 <div className="lg-label-row">
                   <label htmlFor="service-number" className="lg-label">
-                    Service number
+                    Sign-in ID
                   </label>
                 </div>
                 <div className="lg-field-box">
@@ -271,9 +271,9 @@ export default function LoginPage() {
         </div>
 
         <footer className="lg-foot">
-          <span>© 2026 DigiVault</span>
+          <span>© 2026 VeriDoc</span>
           <span>
-            Court portal: <Link href="/verify">/verify</Link>
+            Verify a record: <Link href="/verify">/verify</Link>
           </span>
         </footer>
       </div>
@@ -285,14 +285,14 @@ export default function LoginPage() {
 
         <div className="lg-aside-body">
           <h2 className="lg-aside-title">
-            Every version is hashed, sealed and anchored twice. <span>Courts can check it without an account.</span>
+            Every version is hashed, sealed and anchored twice. <span>Anyone can check it without an account.</span>
           </h2>
 
           <div className="lg-record">
             <div className="lg-record-head">
               <span className="lg-record-name">
                 <LpIcon name="file" size={18} />
-                Case file · v2 redacted
+                Agreement record · v2 redacted
               </span>
               <span className="lg-sealed">
                 <span className="lg-dot" aria-hidden="true" />

@@ -11,7 +11,7 @@ export function ActivityPanel({ rows, loading, showCase = true }: { rows: Activi
       <div className="ws-panel-head">
         <div>
           <h2 id="ws-activity-title" className="ws-panel-title">Recent activity</h2>
-          <p className="ws-panel-sub">From case, document and version records.</p>
+          <p className="ws-panel-sub">From agreement, document and version records.</p>
         </div>
       </div>
       {loading ? (
@@ -25,7 +25,7 @@ export function ActivityPanel({ rows, loading, showCase = true }: { rows: Activi
               <tr>
                 <th scope="col">Time</th>
                 <th scope="col">Action</th>
-                {showCase && <th scope="col">Case</th>}
+                {showCase && <th scope="col">Agreement</th>}
                 <th scope="col">Details</th>
               </tr>
             </thead>

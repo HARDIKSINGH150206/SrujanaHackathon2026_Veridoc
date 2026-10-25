@@ -23,7 +23,6 @@ import { WorkspaceShell, Icon, caseStatusChip, relativeTime, formatDateTime, gre
 import { loadEvidence, buildActivity, anchorState, humanizeCode, type CaseRow, type Evidence, type ActivityRow } from "./data";
 import { ActivityPanel } from "./activity-table";
 import { NewCaseControl } from "./new-case";
-import { DeadlineChip, deadlineSentence, deadlineShort, needsDeadlineAlert } from "./deadline";
 
 const PREVIEW_ROWS = 5;
 
@@ -70,7 +69,7 @@ const IO_CSS = `
 }
 `;
 
-type AttentionItem = { e: Evidence; kind: "review" | "anchor" } | { kase: CaseRow; kind: "deadline" };
+type AttentionItem = { e: Evidence; kind: "review" | "anchor" };
 
 function AttentionRow({ e, kind, href }: { e: Evidence; kind: "review" | "anchor"; href: string }) {
   return (
@@ -125,7 +124,7 @@ export function InvestigationDashboard() {
 
   useEffect(() => {
     load()
-      .catch((err) => setError(err instanceof Error ? err.message : "Could not load your cases."))
+      .catch((err) => setError(err instanceof Error ? err.message : "Could not load your agreements."))
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -154,19 +153,14 @@ export function InvestigationDashboard() {
   const casesNeedingReview = new Set(pendingReview.map((e) => e.kase.id));
 
   // Actions this role can actually take: review first, then anchoring for evidence with nothing left to review.
-  // BNSS s.193(2) alerts (docs/07 Phase 7) come first, closest deadline first.
-  const deadlineAlerts = cases
-    .filter((c) => needsDeadlineAlert(c.bnss_deadline))
-    .sort((a, b) => a.bnss_deadline!.days_left - b.bnss_deadline!.days_left);
   const attention: AttentionItem[] = [
-    ...deadlineAlerts.map((kase) => ({ kase, kind: "deadline" as const })),
     ...pendingReview.map((e) => ({ e, kind: "review" as const })),
     ...(canAnchor ? anchorNeedsAction.filter((e) => (e.pendingSuggestions ?? 0) === 0).map((e) => ({ e, kind: "anchor" as const })) : []),
   ];
 
   const cards = [
-    { icon: "folder" as const, value: cases.filter((c) => c.status.toUpperCase() === "OPEN").length, label: "Open Cases" },
-    { icon: "clock" as const, value: casesNeedingReview.size, label: "Cases Needing Review" },
+    { icon: "folder" as const, value: cases.filter((c) => c.status.toUpperCase() === "OPEN").length, label: "Open Agreements" },
+    { icon: "clock" as const, value: casesNeedingReview.size, label: "Agreements Needing Review" },
     { icon: "file" as const, value: pendingReview.length, label: "Evidence Awaiting Review" },
     { icon: "anchor" as const, value: notAnchored.length, label: "Awaiting Anchor" },
   ];
@@ -189,11 +183,11 @@ export function InvestigationDashboard() {
       <div className="ws-title-row">
         <div>
           <h1 className="ws-title">{greeting(role)}</h1>
-          <p className="ws-subtitle">{role === "ADMIN" ? "Investigation overview across all cases" : "Your investigation overview"}</p>
+          <p className="ws-subtitle">{role === "ADMIN" ? "Overview across all agreements" : "Your overview"}</p>
         </div>
         {can(role, "createCase") && <NewCaseControl onCreated={load} />}
       </div>
-      {error && <p className="ws-alert" role="alert">Could not load your cases: {error}</p>}
+      {error && <p className="ws-alert" role="alert">Could not load your agreements: {error}</p>}
 
       <section className="ws-cards" aria-label="Summary" aria-busy={loading}>
         {cards.map((c) => (
@@ -214,7 +208,7 @@ export function InvestigationDashboard() {
           <div className="ws-panel-head">
             <div>
               <h2 id="io-attention-title" className="ws-panel-title">Needs your attention</h2>
-              <p className="ws-panel-sub">Investigation deadlines, and evidence you can review or anchor.</p>
+              <p className="ws-panel-sub">Evidence you can review or anchor.</p>
             </div>
             {attention.length > PREVIEW_ROWS && (
               <button type="button" className="ws-more" onClick={() => setExpanded((x) => ({ ...x, attention: !x.attention }))}>
@@ -228,26 +222,9 @@ export function InvestigationDashboard() {
             <p className="ws-empty">You&apos;re all caught up.</p>
           ) : (
             <ul className="ws-list">
-              {visibleAttention.map((item) =>
-                item.kind === "deadline" ? (
-                  <li key={`deadline-${item.kase.id}`} role="alert">
-                    <Link className="ws-row" href={`/dashboard/cases/${item.kase.id}`}>
-                      <span className="ws-row-icon"><Icon name="clock" /></span>
-                      <span className="ws-row-main">
-                        <div className="ws-row-title">{item.kase.case_number}</div>
-                        <div className="ws-row-sub" title={deadlineSentence(item.kase.bnss_deadline!)}>{deadlineShort(item.kase.bnss_deadline!)}</div>
-                      </span>
-                      <span className="ws-row-status">
-                        <DeadlineChip deadline={item.kase.bnss_deadline} />
-                        <span className="ws-row-note">{item.kase.bnss_deadline!.covered_sections.join(", ")}</span>
-                      </span>
-                      <span className="ws-chevron"><Icon name="chevron" size={18} /></span>
-                    </Link>
-                  </li>
-                ) : (
-                  <AttentionRow key={`${item.kind}-${item.e.doc.id}`} e={item.e} kind={item.kind} href={versionHref(item.e)} />
-                )
-              )}
+              {visibleAttention.map((item) => (
+                <AttentionRow key={`${item.kind}-${item.e.doc.id}`} e={item.e} kind={item.kind} href={versionHref(item.e)} />
+              ))}
             </ul>
           )}
         </section>
@@ -255,8 +232,8 @@ export function InvestigationDashboard() {
         <section className="ws-panel" aria-labelledby="io-cases-title">
           <div className="ws-panel-head">
             <div>
-              <h2 id="io-cases-title" className="ws-panel-title">Cases</h2>
-              <p className="ws-panel-sub">All cases, most recent activity first.</p>
+              <h2 id="io-cases-title" className="ws-panel-title">Agreements</h2>
+              <p className="ws-panel-sub">All agreements, most recent activity first.</p>
             </div>
             {casesByActivity.length > PREVIEW_ROWS && (
               <button type="button" className="ws-more" onClick={() => setExpanded((x) => ({ ...x, cases: !x.cases }))}>
@@ -267,13 +244,13 @@ export function InvestigationDashboard() {
           {loading ? (
             <p className="ws-empty">Loading…</p>
           ) : cases.length === 0 ? (
-            <p className="ws-empty">No cases yet.</p>
+            <p className="ws-empty">No agreements yet.</p>
           ) : (
             <div className="io-cases-wrap">
             <table className="io-cases">
               <thead>
                 <tr>
-                  <th scope="col">Case #</th>
+                  <th scope="col">Agreement #</th>
                   <th scope="col">Type</th>
                   <th scope="col">Status</th>
                   <th scope="col">Last activity</th>
@@ -293,7 +270,6 @@ export function InvestigationDashboard() {
                       <td>
                         <div className="io-status">
                           {caseStatusChip(kase.status)}
-                          <DeadlineChip deadline={kase.bnss_deadline} />
                         </div>
                       </td>
                       <td className="ws-muted io-when" title={formatDateTime(last)}>{relativeTime(last)}</td>
@@ -313,11 +289,11 @@ export function InvestigationDashboard() {
         <section className="ws-panel" aria-labelledby="io-timeline-title">
           <div className="io-tl-head">
             <div>
-              <h2 id="io-timeline-title" className="ws-panel-title">Case timeline</h2>
-              <p className="ws-panel-sub">Recorded events for one case.</p>
+              <h2 id="io-timeline-title" className="ws-panel-title">Agreement timeline</h2>
+              <p className="ws-panel-sub">Recorded events for one agreement.</p>
             </div>
             {cases.length > 0 && (
-              <select className="io-select" aria-label="Case for timeline" value={timelineCaseId} onChange={(e) => setTimelineCaseId(e.target.value)}>
+              <select className="io-select" aria-label="Agreement for timeline" value={timelineCaseId} onChange={(e) => setTimelineCaseId(e.target.value)}>
                 {casesByActivity.map((c) => (
                   <option key={c.id} value={c.id}>{c.case_number}</option>
                 ))}
@@ -327,7 +303,7 @@ export function InvestigationDashboard() {
           {loading ? (
             <p className="ws-empty">Loading…</p>
           ) : !timelineCase ? (
-            <p className="ws-empty">No cases yet.</p>
+            <p className="ws-empty">No agreements yet.</p>
           ) : (
             <ol className="io-tl">
               {timeline.events.map((ev, i) => {

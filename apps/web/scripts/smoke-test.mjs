@@ -12,8 +12,8 @@ import sharp from "sharp";
 import { computeDocument, randomSalts, verifyRedactionProof } from "../../../packages/crypto-core/reference/dv2-ref.mjs";
 
 const BASE = process.env.E2E_BASE_URL ?? "http://localhost:3000";
-const INVESTIGATOR = { serviceNumber: "DL/2019/3301", pin: "223344" };
-const COURT_OFFICIAL = { serviceNumber: "MH/2020/5512", pin: "334455" };
+const INVESTIGATOR = { serviceNumber: "TEST-PARTY-2", pin: "223344" };
+const COURT_OFFICIAL = { serviceNumber: "TEST-REVIEWER", pin: "334455" };
 const GRID_SIZE = 20;
 const SIZE = 400; // -> exactly 20x20 px tiles, no edge clamping
 
@@ -103,7 +103,7 @@ function buildUploadForm({ png, tiles, clientHash, merkleRoot, commitment, salts
     case_id: caseId,
     document_id: null,
     title: "Smoke Test FIR",
-    doc_type: "FIR",
+    doc_type: "Document",
     source_type: "NATIVE_PDF",
     proof_version: proofVersion,
     grid_size: GRID_SIZE,
@@ -127,7 +127,7 @@ async function main() {
   // 0. Login: wrong PIN -> 401 with the generic message.
   {
     const { res, body } = await postJson("/api/auth/login", { serviceNumber: INVESTIGATOR.serviceNumber, pin: "000000" });
-    results.login_wrong_pin_401 = res.status === 401 && body.message === "Invalid service number or PIN";
+    results.login_wrong_pin_401 = res.status === 401 && body.message === "Invalid sign-in ID or PIN";
   }
 
   const investigatorToken = await login(INVESTIGATOR);
@@ -136,7 +136,7 @@ async function main() {
 
   const { body: createdCase } = await postJson(
     "/api/v1/cases",
-    { case_number: `SMOKE/${Date.now()}`, case_type: "FIR", department: "Women Safety Division" },
+    { case_number: `SMOKE/${Date.now()}`, case_type: "Supply order", department: "General" },
     auth
   );
   const caseId = createdCase.case_id ?? createdCase.id;

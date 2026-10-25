@@ -22,11 +22,11 @@ Every `/api/v1/*` route except the share-link routes (section 7) requires `Autho
 
 ### `POST /api/auth/login`
 ```json
-{ "serviceNumber": "DL/2019/3301", "pin": "223344" }
+{ "serviceNumber": "TEST-PARTY-2", "pin": "223344" }
 ```
 Service number is case-insensitive. PINs are bcrypt-hashed (cost 12). **`200`:**
 ```json
-{ "token": "…", "user_id": "ckuser001", "role": "INVESTIGATING_OFFICER", "service_number": "DL/2019/3301", "department": "Women Safety Division" }
+{ "token": "…", "user_id": "ckuser001", "role": "INVESTIGATING_OFFICER", "service_number": "TEST-PARTY-2", "department": "Women Safety Division" }
 ```
 - `401 UNAUTHENTICATED` — `"Invalid service number or PIN"` (same message whether the service number or the PIN is wrong).
 - `429 RATE_LIMITED` + `Retry-After` — 5 **failed** attempts per 15 min, counted per client IP and per service number (in-memory, single process).
