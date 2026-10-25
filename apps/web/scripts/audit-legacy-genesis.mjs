@@ -83,10 +83,10 @@ try {
   // --- MinIO, Object Lock (Compliance) --------------------------------------
   const minio = new MinioClient({
     endPoint: webEnv.MINIO_ENDPOINT ?? "localhost",
-    port: Number(webEnv.MINIO_PORT ?? 9000),
+    port: Number(webEnv.MINIO_PORT ?? 9100),
     useSSL: false,
-    accessKey: webEnv.MINIO_ACCESS_KEY ?? "digivault",
-    secretKey: webEnv.MINIO_SECRET_KEY ?? "digivault123",
+    accessKey: webEnv.MINIO_ACCESS_KEY ?? "veridoc",
+    secretKey: webEnv.MINIO_SECRET_KEY ?? "veridoc123",
   });
   const bucket = webEnv.MINIO_ANCHOR_BUCKET ?? "digivault-anchors";
   const lock = await minio.getObjectLockConfig(bucket).catch(() => null);
