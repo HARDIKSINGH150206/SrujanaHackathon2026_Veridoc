@@ -64,3 +64,25 @@ describe("POST /api/v1/evidence/terms", () => {
     expect(fetchMock.mock.calls.map((c) => String(c[0]))).toEqual(["http://ai.test/v1/terms"]);
   });
 });
+
+describe("GET /api/v1/evidence/playbooks", () => {
+  let playbooks: typeof import("@/app/api/v1/evidence/playbooks/route");
+  beforeAll(async () => {
+    playbooks = await import("@/app/api/v1/evidence/playbooks/route");
+  });
+  const get = (role: string | null) =>
+    new Request("http://localhost/api/v1/evidence/playbooks", { headers: role ? { Authorization: `Bearer ${token(role)}` } : {} });
+
+  it("needs a signed-in session and the same roles as the terms route", async () => {
+    expect((await playbooks.GET(get(null))).status).toBe(401);
+    expect((await playbooks.GET(get("COURT_OFFICIAL"))).status).toBe(403);
+  });
+
+  it("returns the AI service's playbooks", async () => {
+    const list = { playbooks: [{ id: "supply-order", title: "Supply or order", terms: [] }] };
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify(list), { status: 200 }));
+    const res = await playbooks.GET(get("INVESTIGATING_OFFICER"));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(list);
+  });
+});

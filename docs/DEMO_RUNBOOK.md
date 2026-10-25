@@ -26,7 +26,11 @@ docker compose up -d && (cd apps/ai-service && MODEL_MODE=fake .venv/bin/uvicorn
 
 This starts PostgreSQL and MinIO, the AI service on :8001 and the web app on :3000, all in fake-model mode. Open `http://localhost:3000`. The yellow "Demo mode: recorded model output" badge must be visible at the bottom of every page. If it is not, stop: `MODEL_MODE` is not `fake`.
 
-The AI service's startup check for `MODEL_MODE=fake` has not been run end to end on this branch (the service could not be started where it was written). Try it once before the day. A single wrapper script for this command is a later item.
+The AI service's startup (`MODEL_MODE=fake`) and the Chat terms screen were run end to end on 2026-10-26: AI service and web app up, the supply-order sample analysed, no browser console errors, and no horizontal overflow at 390 px or 1440 px wide.
+
+If `docker compose up -d` stops with "container name already in use", containers named `digivault-postgres` and `digivault-minio` from another checkout are already running. Because the command is chained with `&&`, nothing after it starts. Use those containers as they are and run the other two parts of the command by hand, or stop the old containers first.
+
+A single wrapper script for this command is a later item.
 
 Anchoring needs `AMOY_RPC_URL` in `apps/web/.env.local` and a funded anchoring key (`docs/digivault-archive/DEVELOPMENT.md` section 6, `docs/digivault-archive/05-demo-golden-path.md` for gas figures).
 

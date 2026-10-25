@@ -15,6 +15,9 @@ export function DemoBadge() {
   }
   if (text === null) return null;
   return (
+    <>
+    {/* In-flow spacer so the fixed badge never covers the last lines of a page. */}
+    <div aria-hidden="true" style={{ height: 56 }} />
     <div
       role="status"
       data-testid="demo-mode-badge"
@@ -35,5 +38,6 @@ export function DemoBadge() {
     >
       {text}
     </div>
+    </>
   );
 }

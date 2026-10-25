@@ -90,5 +90,17 @@ class TermsRouteTests(unittest.TestCase):
         self.assertEqual(r.status_code, 413)
 
 
+class PlaybooksRouteTests(unittest.TestCase):
+    def test_lists_the_playbooks_with_their_terms(self):
+        r = client().get("/v1/playbooks")
+        self.assertEqual(r.status_code, 200)
+        books = {b["id"]: b for b in r.json()["playbooks"]}
+        self.assertEqual(set(books), {"supply-order", "freelance-job"})
+        self.assertEqual(books["supply-order"]["title"], "Supply or order")
+        keys = [t["key"] for t in books["supply-order"]["terms"]]
+        self.assertIn("unit_price", keys)
+        self.assertEqual(books["supply-order"]["terms"][0].keys(), {"key", "label", "type", "required"})
+
+
 if __name__ == "__main__":
     unittest.main()
