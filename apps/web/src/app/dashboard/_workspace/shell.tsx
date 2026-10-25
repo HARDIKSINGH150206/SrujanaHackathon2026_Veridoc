@@ -268,7 +268,7 @@ a.ws-row:hover { background: var(--ink-3); }
 `;
 
 /** Header + sidebar frame shared by every workspace page. `extraCss` is page-specific CSS (same no-quotes rule). */
-export function WorkspaceShell({ active, extraCss, children }: { active: "cases" | "audit" | null; extraCss?: string; children: React.ReactNode }) {
+export function WorkspaceShell({ active, extraCss, children }: { active: "cases" | "audit" | "terms" | null; extraCss?: string; children: React.ReactNode }) {
   const { session, logout } = useAuth();
   const role = session?.role ?? "";
   const initials = role.split("_").map((w) => w.charAt(0)).join("").slice(0, 2);
@@ -302,6 +302,11 @@ export function WorkspaceShell({ active, extraCss, children }: { active: "cases"
             <Link href="/dashboard" className={active === "cases" ? "ws-nav-active" : undefined} aria-current={active === "cases" ? "page" : undefined}>
               <Icon name="home" /> Cases
             </Link>
+            {(role === "POLICE_OFFICER" || role === "INVESTIGATING_OFFICER" || role === "ADMIN") && (
+              <Link href="/dashboard/terms" className={active === "terms" ? "ws-nav-active" : undefined} aria-current={active === "terms" ? "page" : undefined}>
+                <Icon name="file" /> Chat terms
+              </Link>
+            )}
             {role === "ADMIN" && (
               <Link href="/dashboard/audit" className={active === "audit" ? "ws-nav-active" : undefined} aria-current={active === "audit" ? "page" : undefined}>
                 <Icon name="check" /> Audit log

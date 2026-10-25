@@ -11,8 +11,8 @@ Status markers: **built** runs in this repository today; **planned** does not ex
 | Web app | `apps/web` | Screens, REST API, sign-in, hash re-verification, hash chain, anchoring, audit log | built (wording still old) |
 | Crypto core | `packages/crypto-core` | PDF page to PNG, tiles, salted Merkle tree. Shared by the browser, the server and the verify page | built |
 | Chat record builder | `apps/web` | Turns the imported chat into a PDF in the browser so the normal upload can hash it (ADR-040, accepted) | planned |
-| AI service | `apps/ai-service` | Redaction tile suggestions (built). Term extraction, flags, recommendation, recap text (planned) | partly built |
-| Model adapter | `apps/ai-service/app/model_adapter.py` | One interface, `extract(numbered_chat, playbook_id)`; fake or local behind it | built; local is a stub |
+| AI service | `apps/ai-service` | Redaction tile suggestions, chat import, term extraction and flags (built). Recommendation and recap text (planned) | partly built |
+| Model adapter | `apps/ai-service/app/model_adapter.py` | One interface, `extract(numbered_chat, playbook_id)`, returning terms with `status`, `value`, `quote[]`, `msg[]` and `reason`; fake or local behind it | built; local is a stub |
 | Vault storage | PostgreSQL (Prisma), MinIO | Versions, tiles, hash chain, audit log, page PNGs, anchor records | built |
 | Anchor | Polygon Amoy, `EvidenceAnchorV2.sol` | Public, append-only record of each version's commitment | built |
 | Verify page | `apps/web/src/app/verify` | Public, stateless check against MinIO and Polygon. No sign-in, no database | built |

@@ -169,10 +169,10 @@ Status as of this document. "Real" means it runs in this repository today. The d
 | Settings (`MODEL_MODE` etc.), model adapter interface, model manifest check | Real | |
 | Model output | Recorded output replayed by `FakeModelAdapter` for two sample chats, including one wrong price and one missed advance on purpose | **Demo.** The UI says "Demo mode: recorded model output" while `MODEL_MODE=fake` |
 | Local model (`LocalModelAdapter`) | | Stub. Raises `NotImplementedError`. The manifest holds a placeholder, not a pinned model |
-| Chat import and parser | | Not built |
 | Model output format with `quote[]` and `msg[]` | Real: the adapter, the recordings and `check_model_output` use it | |
-| Rules engine, term extractor, grounding check | | Not built (`AI_SPEC.md` section 11) |
-| Flags and recommendation | | Not built |
+| Chat parser (Android and iPhone exports, text PDFs) | Real, tested | Scanned PDFs: "not supported yet" |
+| Term extractor with quote and value-versus-quote checks, flags (seven rule flags), needs_review | Real, tested. Shown on `/dashboard/terms` | Runs on recorded model output (demo). Not clicked through in a browser yet |
+| Recommendation | | Not built |
 | Recap and echo code | | Not built |
 | Voice notes | | Not built. Transcripts would be pre-recorded for the demo |
 | Chat saved to the vault | | Not built (design in `ARCHITECTURE.md`, ADR-040 accepted) |
