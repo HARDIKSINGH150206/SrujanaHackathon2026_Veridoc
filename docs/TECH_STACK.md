@@ -27,15 +27,18 @@ Inherited from DigiVault and working (`docs/DEVELOPMENT.md` has the commands).
 | Model manifest and startup hash check | `models/manifest.json`, `apps/ai-service/app/model_manifest.py` | Built; the manifest entry is a placeholder |
 | Demo-mode badge | `apps/web/src/app/_components/demo-badge.tsx` | Built |
 | Synthetic samples | `samples/veridoc/` | Built |
-| Chat parser (`number_chat` exists; the full export parser does not) | `apps/ai-service/app/chat_import.py` | Planned |
-| Rules engine and term extractor with grounding | `apps/ai-service/app/term_extractor.py` | Planned |
-| Flags and recommendation | `apps/ai-service/app/flags.py`, `suggestion.py` | Planned |
+| Chat parser, text-PDF reader (`pypdf`) | `apps/ai-service/app/chat_import.py` | Built |
+| Term extractor with grounding, value check and rule flags | `apps/ai-service/app/term_extractor.py` | Built (rules for amounts, dates and the seven flags; number words not yet) |
+| Terms endpoints | `apps/ai-service/app/terms_router.py`, `apps/web/src/app/api/v1/evidence/terms/route.ts`, `apps/web/src/lib/terms.ts` | Built |
+| Terms screen | `apps/web/src/app/dashboard/terms/page.tsx`, `_workspace/terms-view.tsx` | Built, not clicked through |
+| Recommendation | `apps/ai-service/app/suggestion.py` | Planned |
 | Recap, echo code | `apps/ai-service/app/recap.py` | Planned |
-| Playbooks (YAML, no code) and message templates | `playbooks/` (path set by `PLAYBOOK_DIR`) | Planned |
-| Import, review and recap screens | `apps/web/src/app/dashboard/_workspace/` | Planned |
+| Playbooks (JSON, no code) | `playbooks/` (path set by `PLAYBOOK_DIR`) | Built (two) |
+| Message templates | `playbooks/` | Planned |
+| Confirm and recap screens | `apps/web/src/app/dashboard/_workspace/` | Planned |
 | Chat record builder (chat to PDF in the browser, then the normal upload) | `apps/web` | Planned (ADR-040, proposed) |
 
-New Python libraries are likely `dateparser` and `rapidfuzz` for the rules engine. They are not in `requirements.txt` yet.
+Python libraries added: `pypdf` (text PDFs) and `httpx` (route tests). The rules use only the standard library; `dateparser` and `rapidfuzz` are not used.
 
 ## 3. The local model on the pendrive
 

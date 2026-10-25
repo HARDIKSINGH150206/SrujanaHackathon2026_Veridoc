@@ -71,7 +71,7 @@ The adapter interface:
 extract(numbered_chat: str, playbook_id: str) -> ModelOutput
 ```
 
-`numbered_chat` has one `[n] ` prefix per message (`chat_import.py`, planned; `number_chat` in `model_adapter.py` for now). `n` is the 1-based position of the message in the chat, counting media-omitted, deleted and system lines.
+`numbered_chat` is `[n] Sender: text` per message, made by `chat_import.format_numbered` (continuation lines of a multi-line message are indented four spaces). `n` is the 1-based position of the message in the chat, counting media-omitted, deleted and system lines.
 
 `ModelOutput` is the model's own format, handed over as the model wrote it:
 
@@ -125,7 +125,7 @@ For every term the model returns:
 
 1. The term is well formed (`check_model_output`), its key is in the playbook, and `quote` and `msg` have the same length.
 2. Every number in `msg` is a message in this chat.
-3. Each `quote[i]` is a substring of message `msg[i]`. Comparison is exact after Unicode NFC. A quote that is the sender's name is accepted only for party terms.
+3. Each `quote[i]` is a substring of message `msg[i]`. Comparison is exact after Unicode NFC, with runs of whitespace treated as one space (a multi-line message is indented in the numbered chat). Only a real chat message can be quoted: not a media, deleted or system entry. A quote that is the sender's name of that message is accepted only for party terms.
 4. Where code can check it, `value` follows from the quote (below).
 5. The value does not come only from text that is itself an instruction (section 6).
 
@@ -151,7 +151,19 @@ A term the model missed (the recorded freelance output marks the advance `missin
 
 ## 7. Flags and the recommendation
 
-- **Flags** are built by code from term statuses and the playbook. They are not model output.
+- **Flags** come from rules over the cited messages (`detect_flags` in `term_extractor.py`), not from the model. Each has a plain reason.
+
+| Flag | Applies to | Looks for |
+|---|---|---|
+| `relative_date` | date terms | "next week", "this month", "tomorrow", "kal", "parso", "in 3 days" |
+| `approximate_amount` | money, quantity | "approx", "around 500", "about 200", "lagbhag", ranges such as "40 to 50k" (a date like 12-03-2026 is not a range) |
+| `vague_timing` | money, date, text | "soon", "later", "asap", "baad mein", "jaldi", "when I can" |
+| `conditional` | all | "if", "unless", "depends on", "subject to", "agar" |
+| `unspecified_unit` | money, quantity | a number with no currency (money) or no unit word (quantity) in the quote |
+| `vague_spec` | quantity, text | "some", "a few", "several", "kuch", "etc" |
+| `unconfirmed` | all | the last message cited was written by one person and nobody else wrote after it |
+
+- **Rules first, model second.** All flags except `unconfirmed` make a term unclear. If the rules see one and the model says **stated**, or the model says **unclear** and no rule sees why, the term is **needs_review**. `unconfirmed` is information and changes no status. A model **contradicted** needs quotes from two different messages, and for amounts the quotes must carry different numbers.
 - **Recommendation (F4).** Code picks one gap: contradicted terms first, then missing, then unclear, with the playbook's ask order breaking ties. Two terms may share a message if the playbook lists them as a natural pair (delivery date with final payment). The text comes from fixed templates in three tones (casual, polite, firm), filled with known values. Not free model text. VeriDoc never sends it.
 - **Recap (F5).** Built from confirmed terms only, from fixed per-language templates. Not model text.
 
@@ -191,10 +203,15 @@ No chat text, transcript or name goes into a log. Logs may hold durations, the m
 | Recorded output for two synthetic chats: one wrong price (the value does not follow from a real quote) and one missed advance (`missing` although stated) | Built |
 | `number_chat` | Built |
 | Model output format `terms{key:{status, value, quote[], msg[], reason}}`, `check_model_output`, recordings in that format | Built, pinned by tests |
-| Chat export parser | Not built |
-| Rules engine, grounding check, status and flags | Not built |
+| Chat parser (`chat_import.py`): Android and iPhone exports, multi-line, media omitted, deleted, system lines, invisible marks; text PDFs through the same path, scans refused as "not supported yet" | Built, tested |
+| Playbooks as JSON (`playbooks/`, `PLAYBOOK_DIR`) | Built, two playbooks |
+| Term extractor (`term_extractor.py`): quote check, sender-name rule, value-versus-quote check for amounts and dates, instruction sniffing, malformed output and adapter failure become needs_review, never an exception | Built, tested |
+| Flags (the seven above) and the status rules | Built, tested |
+| `POST /v1/terms` in the AI service, `POST /api/v1/evidence/terms` in the web app, `/dashboard/terms` page | Built. The page is typechecked but not clicked through in a browser |
+| Rules that find a term the model missed (for example the freelance advance) | Not built. The recorded miss still shows as missing |
+| Number words ("pachaas hazaar"), Hindi month names | Not built |
 | Recommendation, recap, echo code | Not built |
-| Injection fixtures | Not built |
+| Injection: a message that tells the AI what to do makes its terms needs_review | Built (one pattern set, tested). The wider fixture set is not built |
 | Local model | Stub. No model is chosen or pinned |
 
 ## 12. What the AI must not do
