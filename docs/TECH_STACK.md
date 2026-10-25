@@ -33,7 +33,7 @@ Inherited from DigiVault and working (`docs/DEVELOPMENT.md` has the commands).
 | Recap, echo code | `apps/ai-service/app/recap.py` | Planned |
 | Playbooks (YAML, no code) and message templates | `playbooks/` (path set by `PLAYBOOK_DIR`) | Planned |
 | Import, review and recap screens | `apps/web/src/app/dashboard/_workspace/` | Planned |
-| Chat record builder (chat to PDF in the browser, then the normal upload) | `apps/web` | Planned (ADR-040, proposed) |
+| Chat record builder (chat to PDF in the browser, then the normal upload) | `apps/web` | Planned (ADR-040, accepted) |
 
 New Python libraries are likely `dateparser` and `rapidfuzz` for the rules engine. They are not in `requirements.txt` yet.
 
