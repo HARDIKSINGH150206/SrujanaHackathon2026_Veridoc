@@ -16,10 +16,10 @@ async function main() {
 
   // Wrong PIN is rejected with the generic message and no session.
   await page.goto(`${BASE}/login`);
-  await page.fill("#service-number", "DL/2019/3301");
+  await page.fill("#service-number", "TEST-PARTY-2");
   await page.fill("#pin", "000000");
   await page.click('button[type="submit"]');
-  await page.waitForSelector("text=Invalid service number or PIN", { timeout: 15000 });
+  await page.waitForSelector("text=Invalid sign-in ID or PIN", { timeout: 15000 });
   console.log("STEP: wrong PIN rejected");
 
   await login(page);

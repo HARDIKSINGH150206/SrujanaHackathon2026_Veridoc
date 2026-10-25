@@ -53,7 +53,7 @@ export function WorkspaceUploadView() {
   const [existing, setExisting] = useState<DocumentRow | null>(null);
   const [existingError, setExistingError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
-  const [docType, setDocType] = useState("FIR");
+  const [docType, setDocType] = useState("Document");
   const [file, setFile] = useState<File | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +68,7 @@ export function WorkspaceUploadView() {
       .then(({ documents }) => {
         const doc = documents.find((d) => d.id === documentId);
         if (doc) setExisting(doc);
-        else setExistingError("This document is not part of this case.");
+        else setExistingError("This document is not part of this agreement.");
       })
       .catch((err) => setExistingError(err instanceof Error ? err.message : String(err)));
   }, [caseId, documentId]);
@@ -126,7 +126,7 @@ export function WorkspaceUploadView() {
   return (
     <WorkspaceShell active="cases" extraCss={UPLOAD_CSS}>
       <Link href={`/dashboard/cases/${caseId}`} className="ws-crumb">
-        <Icon name="back" size={18} /> {kase ? kase.case_number : "Back to case"}
+        <Icon name="back" size={18} /> {kase ? kase.case_number : "Back to agreement"}
       </Link>
       <div className="ws-upload">
         <h1 className="ws-title">{documentId ? "Upload new version" : "Upload document"}</h1>
@@ -152,7 +152,7 @@ export function WorkspaceUploadView() {
               <div className="ws-upload-grid">
                 <label className="ws-field">
                   Document title
-                  <input className="ws-input" required placeholder="e.g. FIR report" value={title} onChange={(e) => setTitle(e.target.value)} disabled={busy} />
+                  <input className="ws-input" required placeholder="e.g. Order confirmation" value={title} onChange={(e) => setTitle(e.target.value)} disabled={busy} />
                 </label>
                 <label className="ws-field">
                   Document type

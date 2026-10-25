@@ -203,7 +203,7 @@ export async function POST(req: Request): Promise<Response> {
       // uploaderId comes from a verified session, so the only foreign key
       // that can fail here is caseId.
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
-        return Response.json({ error: "NOT_FOUND", message: "Case not found." }, { status: 404 });
+        return Response.json({ error: "NOT_FOUND", message: "Agreement not found." }, { status: 404 });
       }
       throw err;
     }

@@ -33,7 +33,7 @@ export async function GET(req: Request, { params }: { params: { caseId: string }
     include: { _count: { select: { documents: true } } },
   });
   if (!kase) {
-    return Response.json({ error: "NOT_FOUND", message: "Case not found." }, { status: 404 });
+    return Response.json({ error: "NOT_FOUND", message: "Agreement not found." }, { status: 404 });
   }
 
   return Response.json(caseJson(kase, kase._count.documents));
@@ -69,7 +69,7 @@ export async function PATCH(req: Request, { params }: { params: { caseId: string
   }
 
   const before = await prisma.case.findUnique({ where: { id: params.caseId } });
-  if (!before) return Response.json({ error: "NOT_FOUND", message: "Case not found." }, { status: 404 });
+  if (!before) return Response.json({ error: "NOT_FOUND", message: "Agreement not found." }, { status: 404 });
 
   const updated = await prisma.case.update({
     where: { id: params.caseId },

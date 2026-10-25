@@ -241,7 +241,7 @@ The backend reads this file. It never edits your UI files, and you never edit th
 
 ## 10. Demo click path (superseded by `docs/digivault-archive/05-demo-golden-path.md`)
 
-1. Log in as an Investigating Officer (`DL/2019/3301`) and open the seeded case.
+1. Log in as an Investigating Officer (`TEST-PARTY-2`) and open the seeded case.
 2. Upload a messy multi-page FIR from `public/sample-firs/`. Watch the hashing stages, then see "Server recomputed ✓" and the anchor pending.
 3. The anchor turns **Anchored**. Open the Polygonscan link.
 4. Review the AI suggestions (victim name, phone, Aadhaar), add one tile manually, confirm with the fingerprint or PIN check, and see v2 created and anchored.

@@ -17,7 +17,6 @@ import { useAuth } from "@/lib/client/auth-context";
 import { apiJson } from "@/lib/client/api-client";
 import { can } from "@/lib/client/permissions";
 import { WorkspaceShell, Icon, caseStatusChip, relativeTime, greeting } from "./_workspace/shell";
-import { DeadlineChip } from "./_workspace/deadline";
 import { loadEvidence, buildActivity, anchorState, type CaseRow, type Evidence } from "./_workspace/data";
 import { ActivityPanel } from "./_workspace/activity-table";
 import { NewCaseControl } from "./_workspace/new-case";
@@ -25,9 +24,9 @@ import { NewCaseControl } from "./_workspace/new-case";
 const PREVIEW_ROWS = 5;
 
 const SUBTITLES: Record<string, string> = {
-  POLICE_OFFICER: "Your evidence workspace",
+  POLICE_OFFICER: "Your agreements and evidence",
   FORENSIC_LAB: "Every stored version, with its fingerprint and anchor record",
-  COURT_OFFICIAL: "Case documents, certificates and verification bundles",
+  COURT_OFFICIAL: "Agreement documents, receipts and verification bundles",
 };
 
 export function WorkspaceDashboard() {
@@ -62,8 +61,8 @@ export function WorkspaceDashboard() {
   const activity = useMemo(() => buildActivity(cases, evidence), [cases, evidence]);
 
   const cards = [
-    { icon: "folder" as const, value: cases.length, label: "Total Cases" },
-    { icon: "clock" as const, value: openCases, label: "Open Cases" },
+    { icon: "folder" as const, value: cases.length, label: "Total Agreements" },
+    { icon: "clock" as const, value: openCases, label: "Open Agreements" },
     { icon: "file" as const, value: evidence.length, label: "Evidence Files" },
     canViewSuggestions
       ? { icon: "review" as const, value: needsReview.length, label: "Review Required" }
@@ -105,7 +104,7 @@ export function WorkspaceDashboard() {
           <div className="ws-panel-head">
             <div>
               <h2 id="ws-left-title" className="ws-panel-title">{canViewSuggestions ? "Evidence requiring attention" : "Recent evidence"}</h2>
-              <p className="ws-panel-sub">{canViewSuggestions ? "Documents with redaction suggestions still to review." : "Documents across all cases, newest first."}</p>
+              <p className="ws-panel-sub">{canViewSuggestions ? "Documents with redaction suggestions still to review." : "Documents across all agreements, newest first."}</p>
             </div>
             {leftItems.length > PREVIEW_ROWS && (
               <button type="button" className="ws-more" onClick={() => setExpanded((x) => ({ ...x, evidence: !x.evidence }))}>
@@ -131,7 +130,7 @@ export function WorkspaceDashboard() {
         <section className="ws-panel" aria-labelledby="ws-cases-title">
           <div className="ws-panel-head">
             <div>
-              <h2 id="ws-cases-title" className="ws-panel-title">Recent cases</h2>
+              <h2 id="ws-cases-title" className="ws-panel-title">Recent agreements</h2>
               <p className="ws-panel-sub">Newest first, with their status.</p>
             </div>
             {cases.length > PREVIEW_ROWS && (
@@ -143,7 +142,7 @@ export function WorkspaceDashboard() {
           {loading ? (
             <p className="ws-empty">Loading…</p>
           ) : cases.length === 0 ? (
-            <p className="ws-empty">No cases yet.</p>
+            <p className="ws-empty">No agreements yet.</p>
           ) : (
             <ul className="ws-list">
               {visibleCases.map((kase) => (
@@ -156,7 +155,6 @@ export function WorkspaceDashboard() {
                       </div>
                     </span>
                     {caseStatusChip(kase.status)}
-                    <DeadlineChip deadline={kase.bnss_deadline} />
                     <span className="ws-row-meta">Opened {relativeTime(kase.created_at)}</span>
                     <span className="ws-chevron"><Icon name="chevron" size={18} /></span>
                   </Link>

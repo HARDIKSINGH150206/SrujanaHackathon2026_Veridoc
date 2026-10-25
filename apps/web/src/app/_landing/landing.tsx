@@ -58,13 +58,13 @@ function Nav({ signedIn }: { signedIn: boolean }) {
   return (
     <header className="lp-nav">
       <div className="lp-wrap-wide lp-nav-inner">
-        <Link href="/" className="lp-brand" aria-label="DigiVault home">
+        <Link href="/" className="lp-brand" aria-label="VeriDoc home">
           <BrandMark size={22} />
-          DigiVault
+          VeriDoc
         </Link>
         <nav className="lp-links" aria-label="Sections">
           <a href="#how">How it works</a>
-          <a href="#custody">Custody</a>
+          <a href="#custody">Hash chain</a>
           <a href="#portal">Verification</a>
           <a href="#roles">Roles</a>
         </nav>
@@ -95,14 +95,14 @@ const SPARK = "M0,34 C10,30 16,12 26,16 C36,20 40,36 52,32 C62,28 66,10 78,14 C9
 
 function ProductPreview() {
   return (
-    <div className="lp-app" role="img" aria-label="DigiVault case workspace with sample data">
+    <div className="lp-app" role="img" aria-label="VeriDoc agreement workspace with sample data">
       <aside className="lp-app-side" aria-hidden="true">
         <div className="lp-app-brand">
           <span className="lp-app-logo">
             <BrandMark size={16} />
           </span>
           <span>
-            <b>DigiVault</b>
+            <b>VeriDoc</b>
             <small>Evidence</small>
           </span>
         </div>
@@ -112,7 +112,7 @@ function ProductPreview() {
         <p className="lp-app-label">Main</p>
         {(
           [
-            ["folder-cases", "Cases", "file"],
+            ["folder-cases", "Agreements", "file"],
             ["upload", "Upload evidence", "upload"],
             ["review", "Redaction review", "user-check"],
             ["verify", "Verify", "shield"],
@@ -126,10 +126,10 @@ function ProductPreview() {
         ))}
         <div className="lp-app-sep" />
         <div className="lp-app-group">
-          Recent cases <LpIcon name="chevron-down" size={14} />
+          Recent agreements <LpIcon name="chevron-down" size={14} />
         </div>
         <div className="lp-app-recent">
-          {["Witness statement, 1123", "FIR scan, 1098", "Forensic report, 1071", "Charge sheet, 1064", "Medical record, 1052", "Statement, 1049"].map((c) => (
+          {["Order confirmation, 1123", "Chat export, 1098", "Recap, 1071", "Invoice, 1064", "Receipt, 1052", "Delivery note, 1049"].map((c) => (
             <span key={c}>{c}</span>
           ))}
         </div>
@@ -142,10 +142,10 @@ function ProductPreview() {
         </div>
         <div className="lp-app-user">
           <div className="lp-app-user-row">
-            <span className="lp-app-avatar">RS</span>
+            <span className="lp-app-avatar">DV</span>
             <span>
-              <b>Insp. R. Sharma</b>
-              <small>Investigating Officer</small>
+              <b>Dev</b>
+              <small>Party</small>
             </span>
           </div>
           <div className="lp-app-theme">
@@ -165,7 +165,7 @@ function ProductPreview() {
       <div className="lp-app-main" aria-hidden="true">
         <div className="lp-app-top">
           <span className="lp-app-chip-btn">
-            <LpIcon name="back" size={14} /> Cases
+            <LpIcon name="back" size={14} /> Agreements
           </span>
           <span className="lp-app-top-r">
             <span className="lp-app-sample">Sample data</span>
@@ -173,7 +173,7 @@ function ProductPreview() {
               <LpIcon name="bell" size={15} />
             </span>
             <span className="lp-app-black-btn">
-              <LpIcon name="plus" size={14} stroke={2.2} /> New case
+              <LpIcon name="plus" size={14} stroke={2.2} /> New agreement
             </span>
             <span className="lp-app-icon-btn">
               <LpIcon name="menu" size={15} />
@@ -184,8 +184,8 @@ function ProductPreview() {
         <div className="lp-app-banner">
           <div className="lp-app-banner-text">
             <p className="lp-app-eyebrow">Version 2 · redacted</p>
-            <h3>Case 2026/1123</h3>
-            <p className="lp-app-muted">Witness statement, 6 pages. Sealed and anchored twice.</p>
+            <h3>Agreement 2026/1123</h3>
+            <p className="lp-app-muted">Order confirmation, 6 pages. Sealed and anchored twice.</p>
             <span className="lp-app-black-btn lp-app-banner-btn">
               <LpIcon name="upload" size={14} /> Upload version
             </span>
@@ -217,7 +217,7 @@ function ProductPreview() {
                 <div className="lp-app-card-top">
                   <span>
                     <b>Hash time</b>
-                    <small>witness-statement.pdf</small>
+                    <small>order-confirmation.pdf</small>
                   </span>
                   <span className="lp-app-mini-seg">
                     <span>1h</span>
@@ -342,16 +342,16 @@ function Hero({ signedIn }: { signedIn: boolean }) {
       <div className="lp-hero-inner">
         <Link href="/verify" className="lp-pill lp-rise">
           <span className="lp-pill-tag">Public</span>
-          Court verification needs no login
+          Public verification needs no login
         </Link>
         <h1 id="lp-title" className="lp-h1">
-          <span className="lp-word">Evidence</span> <span className="lp-word">that</span> <span className="lp-word">proves</span>{" "}
+          <span className="lp-word">Agreements</span> <span className="lp-word">that</span> <span className="lp-word">show</span>{" "}
           <br className="lp-br" />
-          <span className="lp-word">it</span> <span className="lp-word">was</span> <span className="lp-word">never</span>{" "}
+          <span className="lp-word">if</span> <span className="lp-word">they</span> <span className="lp-word">were</span> <span className="lp-word">ever</span>{" "}
           <span className="lp-word">changed</span>
         </h1>
         <p className="lp-lede lp-rise lp-d2">
-          Every page is fingerprinted in the officer&apos;s browser and anchored on a public chain. A court can check it without trusting us.
+          Every page is fingerprinted in your browser and anchored on a public chain. Anyone can check it without trusting us.
         </p>
         <div className="lp-hero-actions lp-rise lp-d3">
           <Link href={signedIn ? "/dashboard" : "/login"} className="lp-btn lp-btn-light">
@@ -360,9 +360,9 @@ function Hero({ signedIn }: { signedIn: boolean }) {
           <span className="lp-hero-proof">
             <LpIcon name="shield" size={22} className="lp-hero-proof-icon" />
             <span>
-              <b>Built for NCRB</b> · Women Safety
+              <b>Tamper-evident</b> records
               <br />
-              BSA 2023 §63 ready
+              Anchored on Polygon Amoy
             </span>
           </span>
         </div>
@@ -371,7 +371,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
         <ProductPreview />
       </div>
       <div className="lp-wrap lp-strip">
-        <p>Built on open standards a court can check on its own</p>
+        <p>Built on open standards anyone can check</p>
         <div className="lp-strip-row" aria-label="Standards">
           <span className="lp-wm lp-wm-mono">SHA-256</span>
           <span className="lp-wm lp-wm-poly">
@@ -383,7 +383,7 @@ function Hero({ signedIn }: { signedIn: boolean }) {
           <span className="lp-wm lp-wm-minio">MINIO</span>
           <span className="lp-wm lp-wm-webauthn">WebAuthn</span>
           <span className="lp-wm lp-wm-pdf">PDF.js</span>
-          <span className="lp-wm lp-wm-serif">BSA 2023</span>
+          <span className="lp-wm lp-wm-serif">RFC 6962</span>
         </div>
       </div>
     </section>
@@ -399,7 +399,7 @@ const FEATURES: Feature[] = [
   {
     title: "Hash in the browser",
     body: "Each page becomes a lossless PNG, split into a 20 × 20 grid. Every tile is hashed and folded into one Merkle root before upload.",
-    head: "witness-statement.pdf",
+    head: "order-confirmation.pdf",
     badge: "Live",
     big: "264",
     unit: "ms",
@@ -443,15 +443,15 @@ const FEATURES: Feature[] = [
   },
   {
     title: "Redact with a human",
-    body: "AI suggests tiles with names, phone and Aadhaar numbers. An officer confirms with a fingerprint or PIN, and a new chained version is made.",
+    body: "AI suggests tiles with names, phone numbers and addresses. You confirm with a fingerprint or PIN, and a new chained version is made.",
     head: "Suggestions",
-    badge: "Officer",
+    badge: "You",
     big: "3",
     unit: "tiles",
     steps: [
-      { label: "Victim name", value: "IndicNER" },
-      { label: "Aadhaar number", value: "Text layer" },
-      { label: "Home address", value: "Bhashini" },
+      { label: "Person name", value: "spaCy" },
+      { label: "Phone number", value: "Pattern" },
+      { label: "Home address", value: "spaCy + pattern" },
       { label: "Step-up confirmed", value: "PIN" },
     ],
     foot: "AI output never touches a hash",
@@ -474,7 +474,7 @@ function Features() {
     <section id="how" className="lp-section lp-section-first" aria-labelledby="lp-how">
       <div className="lp-wrap">
         <h2 id="lp-how" className="lp-h2 lp-h2-medium">
-          Everything between an upload and a courtroom
+          Everything between a chat and a receipt
         </h2>
         <div className="lp-panel" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
           <TileField className="lp-fill lp-tf-panel" seed={19} density={0.09} accents={6} pulses={6} />
@@ -502,7 +502,7 @@ function Features() {
             <p className="lp-float-foot">{f.foot}</p>
           </div>
         </div>
-        <div className="lp-tabs" role="tablist" aria-label="How DigiVault works">
+        <div className="lp-tabs" role="tablist" aria-label="How VeriDoc works">
           {FEATURES.map((x, i) => {
             const on = i === active;
             return (
@@ -518,7 +518,7 @@ function Features() {
         </div>
         <div className="lp-actions">
           <Link href="/login" className="lp-btn lp-btn-dark">
-            Start a case <Arrow />
+            Start an agreement <Arrow />
           </Link>
           <Link href="/verify" className="lp-btn lp-btn-ghost">
             Verify a document
@@ -597,7 +597,7 @@ function Portal() {
             <span className="lp-eyebrow-icon">
               <LpIcon name="scale" size={14} />
             </span>
-            Court Verification Portal
+            Verify page
           </span>
           <h2 id="lp-portal" className="lp-h2">
             Every proof checks
@@ -628,7 +628,7 @@ function Portal() {
               ["globe", "Public and stateless", "No account, no session and no database behind the check. Open it from any browser."],
               ["layers", "Tile-by-tile proof", "The portal re-tiles the PNG, rehashes all 400 tiles per page and rebuilds the root."],
               ["chain", "Read straight from the chain", "The root comes from the official contract on Polygon Amoy, never from the file."],
-              ["eye", "The original stays sealed", "Courts check the redacted version. The unredacted upload never leaves custody."],
+              ["eye", "The original stays sealed", "Anyone you share with checks the redacted version. The unredacted upload stays private."],
             ] as [LpIconName, string, string][]
           ).map(([icon, t, b]) => (
             <div key={t} className="lp-col">
@@ -684,14 +684,14 @@ function TwoFiles() {
         </h2>
         <p className="lp-sub">
           Drop a page PNG and its proof file into the portal. It rebuilds the Merkle tree in your browser and reads the root from Polygon. It
-          never asks DigiVault.
+          never asks VeriDoc.
         </p>
         <div className="lp-actions">
           <Link href="/verify" className="lp-btn lp-btn-dark">
             Open the portal <Arrow />
           </Link>
           <a href="#custody" className="lp-btn lp-btn-outline">
-            See the custody chain
+            See the hash chain
           </a>
         </div>
         <div ref={ref} className={`lp-dev ${seen ? "lp-dev-on" : ""}`}>
@@ -735,7 +735,7 @@ function TwoFiles() {
                   <i /> In your browser
                 </span>
               </div>
-              <div className="lp-resp-q">Is page 2 of case 2026/1123 unchanged?</div>
+              <div className="lp-resp-q">Is page 2 of agreement 2026/1123 unchanged?</div>
               <ul className="lp-checks">
                 {CHECKS.map((c, i) => (
                   <li key={c.t} className="lp-check" style={{ animationDelay: `${300 + i * 380}ms` }}>
@@ -774,7 +774,7 @@ function TwoFiles() {
             ["Proof file", "", "Every tile hash and the anchor, in JSON."],
             ["Page PNGs", "", "Lossless, decoded and re-tiled locally."],
             ["Chain lookup", "Amoy", "Root read from the official contract."],
-            ["BSA certificate", "§63", "Section 63 certificate for the court."],
+            ["Certificate", "", "A pre-filled certificate for this version."],
             ["Share links", "", "Only ever serve the redacted version."],
           ].map(([t, badge, d], i) => (
             <div key={t} className={`lp-cap ${i === 0 ? "lp-cap-on" : ""}`}>
@@ -793,15 +793,15 @@ function TwoFiles() {
 /* ---------- Roles (catalog layout, interactive rail) ---------- */
 
 const ROLES: { name: string; short: string; icon: LpIconName; blurb: string }[] = [
-  { name: "Police Officer", short: "PO", icon: "user-check", blurb: "Opens cases, uploads and confirms redactions" },
-  { name: "Investigating Officer", short: "IO", icon: "fingerprint", blurb: "Runs the full case workflow" },
-  { name: "Court Official", short: "CO", icon: "scale", blurb: "Reads versions and downloads proof" },
-  { name: "Forensic Lab", short: "FL", icon: "cpu", blurb: "Reads versions and downloads proof" },
+  { name: "Party", short: "PA", icon: "user-check", blurb: "Opens agreements, saves records and confirms redactions" },
+  { name: "Party (shares)", short: "PS", icon: "fingerprint", blurb: "Everything a Party does, plus anchoring retries and share links" },
+  { name: "Reviewer", short: "RV", icon: "scale", blurb: "Reads versions and downloads proof" },
+  { name: "Verifier", short: "VF", icon: "cpu", blurb: "Reads versions and downloads proof" },
   { name: "Admin", short: "AD", icon: "key", blurb: "Everything, including anchoring retries" },
 ];
 
 const ACTIONS: { label: string; allowed: boolean[]; stepUp: boolean }[] = [
-  { label: "Open cases and upload", allowed: [true, true, false, false, true], stepUp: false },
+  { label: "Open agreements and upload", allowed: [true, true, false, false, true], stepUp: false },
   { label: "Confirm redactions", allowed: [true, true, false, false, true], stepUp: true },
   { label: "Read versions and anchors", allowed: [true, true, true, true, true], stepUp: false },
   { label: "Download proof and certificate", allowed: [true, true, true, true, true], stepUp: true },
@@ -890,7 +890,7 @@ function Roles() {
             </div>
             <div className="lp-rolereply">
               <p className="lp-rolereply-who">
-                <BrandMark size={14} /> DigiVault
+                <BrandMark size={14} /> VeriDoc
               </p>
               <p className="lp-roletrace">
                 <LpIcon name="check" size={12} stroke={2.4} /> Read the role from the signed session
@@ -938,13 +938,13 @@ function Cta({ signedIn }: { signedIn: boolean }) {
       <div className="lp-cta">
         <TileField className="lp-fill lp-tf-cta" seed={29} density={0.08} accents={5} pulses={6} />
         <div className="lp-cta-brand">
-          <BrandMark size={26} /> DigiVault
+          <BrandMark size={26} /> VeriDoc
         </div>
         <div className="lp-cta-row">
           <h2 id="lp-cta" className="lp-cta-h">
             Ready to seal your
             <br />
-            first case file?
+            first agreement?
           </h2>
           <div className="lp-cta-actions">
             <Link href={signedIn ? "/dashboard" : "/login"} className="lp-btn lp-btn-light">
@@ -967,27 +967,27 @@ function Footer() {
         <div className="lp-footer-grid">
           <div>
             <Link href="/" className="lp-brand">
-              <BrandMark size={22} /> DigiVault
+              <BrandMark size={22} /> VeriDoc
             </Link>
-            <p className="lp-footer-tag">Tamper-evident evidence for the NCRB Women Safety Division.</p>
+            <p className="lp-footer-tag">Verified recaps and tamper-evident receipts for informal agreements.</p>
           </div>
           <div>
             <p className="lp-footer-h">Product</p>
             <Link href="/login" className="lp-fi">Sign in</Link>
             <a href="#how" className="lp-fi">How it works</a>
-            <a href="#custody" className="lp-fi">Chain of custody</a>
+            <a href="#custody" className="lp-fi">Hash chain</a>
             <a href="#roles" className="lp-fi">Roles</a>
           </div>
           <div>
             <p className="lp-footer-h">Verification</p>
-            <Link href="/verify" className="lp-fi">Court portal</Link>
+            <Link href="/verify" className="lp-fi">Verify page</Link>
             <a href="#portal" className="lp-fi">How checks work</a>
-            <span className="lp-fi">BSA §63 certificate</span>
+            <span className="lp-fi">Certificate PDF</span>
           </div>
           <div>
             <p className="lp-footer-h">Project</p>
-            <span className="lp-fi">NCRB, Women Safety</span>
-            <span className="lp-fi">Smart India Hackathon</span>
+            <span className="lp-fi">Srujana Hackathon</span>
+            <span className="lp-fi">LS-06, From Handshake to Contract</span>
             <span className="lp-fi">Polygon Amoy testnet</span>
           </div>
         </div>
@@ -995,7 +995,7 @@ function Footer() {
           <span className="lp-footer-status">
             <i className="lp-dot-ok" /> Anchoring on Polygon Amoy, chain 80002
           </span>
-          <span>© 2026 DigiVault</span>
+          <span>© 2026 VeriDoc</span>
         </div>
       </div>
     </footer>

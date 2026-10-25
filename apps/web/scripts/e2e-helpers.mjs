@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 export const BASE = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 export const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 
-export const INVESTIGATING_OFFICER = { serviceNumber: "DL/2019/3301", pin: "223344" };
+export const INVESTIGATING_OFFICER = { serviceNumber: "TEST-PARTY-2", pin: "223344" };
 
 /**
  * A PDF with text the AI service reliably flags (a name, a phone number),
@@ -46,11 +46,11 @@ export async function login(page, { serviceNumber, pin } = INVESTIGATING_OFFICER
 /** Creates a case from the dashboard and opens it. Returns the case number. */
 export async function createAndOpenCase(page, prefix) {
   const caseNumber = `${prefix}/${Date.now()}`;
-  await page.click('button:has-text("New Case")');
-  await page.getByLabel("Case number").fill(caseNumber);
-  await page.getByLabel("Case type").fill("FIR");
-  await page.getByLabel("Department").fill("Women Safety Division");
-  await page.click('button:has-text("Create case")');
+  await page.click('button:has-text("New Agreement")');
+  await page.getByLabel("Agreement number").fill(caseNumber);
+  await page.getByLabel("Agreement type").fill("Supply order");
+  await page.getByLabel("Department").fill("General");
+  await page.click('button:has-text("Create agreement")');
   const link = page.getByRole("link", { name: caseNumber, exact: true }).first();
   await link.waitFor({ timeout: 15000 });
   await link.click();

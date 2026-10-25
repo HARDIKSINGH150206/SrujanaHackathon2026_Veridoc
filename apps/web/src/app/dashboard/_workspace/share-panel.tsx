@@ -132,7 +132,7 @@ export function WorkspaceSharePanel({ documentId }: { documentId: string }) {
       <form onSubmit={handleCreate} style={{ display: "grid", gap: 12, marginTop: 14 }}>
         <label className="ws-field">
           Recipient
-          <input id="share-recipient" className="ws-input" required placeholder="e.g. Sessions Court, Room 7" value={recipientLabel} onChange={(e) => setRecipientLabel(e.target.value)} />
+          <input id="share-recipient" className="ws-input" required placeholder="e.g. My accountant" value={recipientLabel} onChange={(e) => setRecipientLabel(e.target.value)} />
         </label>
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 12 }}>
           <label className="ws-field">

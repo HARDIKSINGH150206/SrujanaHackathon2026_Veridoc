@@ -14,13 +14,13 @@ Every "Verified" or "Anchored" on screen comes from a real check against Polygon
 
 ## 1. Accounts
 
-From `apps/web/prisma/seed-demo.ts` (named demo accounts). The `prisma/seed-for-testing.mjs` accounts (e.g. `DL/2019/3301`) also work but look like test data on screen.
+From `apps/web/prisma/seed-demo.ts` (named demo accounts). The `prisma/seed-for-testing.mjs` accounts (e.g. `TEST-PARTY-2`) also work but look like test data on screen.
 
 | Role | Name | Service number | PIN |
 |---|---|---|---|
-| Investigating Officer | IO Rajiv Sharma | `UP/2021/4821` | `224466` |
-| Court Official | Court Official Anand | `DL/2020/7755` | `446688` |
-| Admin | SP Meera Iyer | `KA/2018/1042` | `112233` |
+| Investigating Officer | IO Rajiv Sharma | `PARTY-DEV` | `224466` |
+| Court Official | Court Official Anand | `REVIEWER-1` | `446688` |
+| Admin | SP Meera Iyer | `ADMIN-ASHA` | `112233` |
 
 ## 2. Before the demo (T−30 min)
 

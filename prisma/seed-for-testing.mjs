@@ -10,11 +10,11 @@ const prisma = new PrismaClient();
 const BCRYPT_COST = 12;
 
 const seedUsers = [
-  { role: "POLICE_OFFICER", serviceNumber: "BR/2021/6614", pin: "112233" },
-  { role: "INVESTIGATING_OFFICER", serviceNumber: "DL/2019/3301", pin: "223344" },
-  { role: "COURT_OFFICIAL", serviceNumber: "MH/2020/5512", pin: "334455" },
-  { role: "FORENSIC_LAB", serviceNumber: "KA/2022/7891", pin: "445566" },
-  { role: "ADMIN", serviceNumber: "NCRB/2018/0001", pin: "556677" },
+  { role: "POLICE_OFFICER", serviceNumber: "TEST-PARTY-1", pin: "112233" },
+  { role: "INVESTIGATING_OFFICER", serviceNumber: "TEST-PARTY-2", pin: "223344" },
+  { role: "COURT_OFFICIAL", serviceNumber: "TEST-REVIEWER", pin: "334455" },
+  { role: "FORENSIC_LAB", serviceNumber: "TEST-VERIFIER", pin: "445566" },
+  { role: "ADMIN", serviceNumber: "TEST-ADMIN", pin: "556677" },
 ];
 
 async function main() {
@@ -25,7 +25,7 @@ async function main() {
     const user = await prisma.user.upsert({
       where: { authIdentity },
       update: { serviceNumber, pinHash },
-      create: { role, department: "Women Safety Division", authIdentity, serviceNumber, pinHash },
+      create: { role, department: "General", authIdentity, serviceNumber, pinHash },
     });
     users[role] = user;
     console.log(role.padEnd(22), serviceNumber.padEnd(15), "->", user.id);
@@ -36,9 +36,9 @@ async function main() {
     update: {},
     create: {
       caseNumber: "TEST/2026/0001",
-      caseType: "FIR",
+      caseType: "Supply order",
       status: "OPEN",
-      department: "Women Safety Division",
+      department: "General",
       createdById: users.INVESTIGATING_OFFICER.id,
     },
   });

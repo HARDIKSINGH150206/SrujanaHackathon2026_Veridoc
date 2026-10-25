@@ -30,9 +30,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { BASE, SCRIPTS_DIR, login, createAndOpenCase, uploadDocument, waitForAnchor, logBrowserErrors, stepUpWithPin } from "./e2e-helpers.mjs";
 
-const IO = { serviceNumber: "UP/2021/4821", pin: "224466" }; // IO Rajiv Sharma (seed-demo.ts)
-const ADMIN = { serviceNumber: "KA/2018/1042", pin: "112233" }; // SP Meera Iyer
-const COURT = { serviceNumber: "DL/2020/7755", pin: "446688" }; // Court Official Anand
+const IO = { serviceNumber: "PARTY-DEV", pin: "224466" }; // IO Rajiv Sharma (seed-demo.ts)
+const ADMIN = { serviceNumber: "ADMIN-ASHA", pin: "112233" }; // SP Meera Iyer
+const COURT = { serviceNumber: "REVIEWER-1", pin: "446688" }; // Court Official Anand
 const OUT = mkdtempSync(path.join(tmpdir(), "dv-golden-"));
 
 // Budgets from docs/05 §3 (seconds of wall time the step may take live).

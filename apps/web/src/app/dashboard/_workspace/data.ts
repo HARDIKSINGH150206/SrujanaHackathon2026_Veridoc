@@ -111,7 +111,7 @@ export async function loadEvidence(cases: CaseRow[], canViewSuggestions: boolean
 
 /** Timeline built only from timestamps already on case, document, version and anchor records (there is no audit-log endpoint). */
 export function buildActivity(cases: CaseRow[], evidence: Evidence[], limit = 8): ActivityRow[] {
-  const rows: ActivityRow[] = cases.map((kase) => ({ at: kase.created_at, kind: "case", action: "Case opened", kase, details: `${humanizeCode(kase.case_type)} · ${kase.department}` }));
+  const rows: ActivityRow[] = cases.map((kase) => ({ at: kase.created_at, kind: "case", action: "Agreement opened", kase, details: `${humanizeCode(kase.case_type)} · ${kase.department}` }));
   for (const e of evidence) {
     rows.push({ at: e.doc.created_at, kind: "upload", action: "Evidence uploaded", kase: e.kase, details: e.doc.title });
     if (e.version && e.version.version_no > 1) {
