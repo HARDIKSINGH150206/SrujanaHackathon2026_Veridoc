@@ -76,6 +76,16 @@ function looksLikeTermsResponse(b: unknown): b is TermsResponse {
   return typeof r.playbook_id === "string" && Array.isArray(r.messages) && typeof report === "object" && report !== null && Array.isArray(report.terms);
 }
 
+/** Maps a non-OK AI service answer. Its own refusals about the input ({detail: {code, message}}) are shown; anything else is not for the user. */
+export function aiFailure(status: number, body: unknown): { status: number; body: { error: string; message: string } } {
+  const detail = typeof body === "object" && body !== null ? (body as { detail?: unknown }).detail : undefined;
+  if ((status === 422 || status === 413) && typeof detail === "object" && detail !== null) {
+    const d = detail as { code?: unknown; message?: unknown };
+    if (typeof d.code === "string" && typeof d.message === "string") return { status, body: { error: d.code, message: d.message } };
+  }
+  return { status: 502, body: { error: "AI_SERVICE_ERROR", message: "The analysis service could not process this request." } };
+}
+
 export async function requestTerms(
   req: TermsRequest,
   opts: { baseUrl?: string | undefined; fetchImpl?: typeof fetch } = { baseUrl: process.env.AI_SERVICE_URL }
@@ -103,11 +113,5 @@ export async function requestTerms(
     }
     return { status: 200, body };
   }
-  // The AI service's own refusals ({detail: {code, message}}) are about the input: show them. Anything else is not for the user.
-  const detail = typeof body === "object" && body !== null ? (body as { detail?: unknown }).detail : undefined;
-  if ((res.status === 422 || res.status === 413) && typeof detail === "object" && detail !== null) {
-    const d = detail as { code?: unknown; message?: unknown };
-    if (typeof d.code === "string" && typeof d.message === "string") return { status: res.status, body: { error: d.code, message: d.message } };
-  }
-  return { status: 502, body: { error: "AI_SERVICE_ERROR", message: "The analysis service could not process this chat." } };
+  return aiFailure(res.status, body);
 }

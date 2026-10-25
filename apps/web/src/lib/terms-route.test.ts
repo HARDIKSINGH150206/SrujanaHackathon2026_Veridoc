@@ -64,3 +64,34 @@ describe("POST /api/v1/evidence/terms", () => {
     expect(fetchMock.mock.calls.map((c) => String(c[0]))).toEqual(["http://ai.test/v1/terms"]);
   });
 });
+
+describe("POST /api/v1/evidence/recap", () => {
+  let recap: typeof import("@/app/api/v1/evidence/recap/route");
+  beforeAll(async () => {
+    recap = await import("@/app/api/v1/evidence/recap/route");
+  });
+  const body = { playbook_id: "supply-order", language: "en", terms: [{ key: "quantity", status: "stated", value: "200", quote: ["200 notebooks"], msg: [1], confirmed: true }] };
+  const post = (b: unknown, role: string | null = "INVESTIGATING_OFFICER") =>
+    new Request("http://localhost/api/v1/evidence/recap", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(role ? { Authorization: `Bearer ${token(role)}` } : {}) },
+      body: JSON.stringify(b),
+    });
+  const AI = { language: "en", title: "t", text: "Hi", lines: [], open_points: [], suggestions: [], reply_line: "CONFIRM {code}", disclaimer: "d" };
+
+  it("needs a session and a role that may upload", async () => {
+    expect((await recap.POST(post(body, null))).status).toBe(401);
+    expect((await recap.POST(post(body, "COURT_OFFICIAL"))).status).toBe(403);
+  });
+
+  it("rejects a malformed body", async () => {
+    expect((await recap.POST(post({ playbook_id: "p" }))).status).toBe(400);
+  });
+
+  it("forwards to the AI service only, and returns its recap", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify(AI), { status: 200 }));
+    const res = await recap.POST(post(body));
+    expect(res.status).toBe(200);
+    expect(fetchMock.mock.calls.map((c) => String(c[0]))).toEqual(["http://ai.test/v1/recap"]);
+  });
+});
