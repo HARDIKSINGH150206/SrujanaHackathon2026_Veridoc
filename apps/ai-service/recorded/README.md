@@ -5,8 +5,16 @@ real model output, for the two sample chats in `samples/veridoc/` only. Keyed by
 playbook id and the SHA-256 of the numbered chat, so editing a chat makes its
 recording stop matching (on purpose).
 
+Each recording's `output` is in the model's own format:
+
+    {"terms": {key: {"status": "stated|unclear|contradicted|missing",
+                     "value": str | null, "quote": [str], "msg": [int], "reason": str}}}
+
+`quote[i]` is text copied from message `msg[i]` (1-based position in the numbered chat).
+
 Two planted mistakes, pinned by `tests/test_model_adapter.py`:
-- `supply-order`: the price per notebook is recorded as 54; the chat says 45.
-- `freelance-job`: the advance is missing.
+- `supply-order`: `unit_price` is recorded as `54`. The quote ("₹45 per piece") is real and
+  in the cited message; the value does not follow from it. Only a value-versus-quote check catches it.
+- `freelance-job`: `advance` is recorded as `missing`, although messages 4 to 6 state it.
 
 The UI shows "Demo mode: recorded model output" while this is in use.
