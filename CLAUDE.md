@@ -18,7 +18,7 @@ Before writing any code read `docs/PRD.md`, `docs/ARCHITECTURE.md` and `docs/AI_
 7. **The AI step only suggests.** It never writes to the vault, the audit log or the hash path. Rules run first, the model second. Every term needs a source quote that appears **verbatim** in the cited message, and a human confirmation. Chat text is data, never instructions (`docs/AI_SPEC.md`).
 8. **Say only what runs.** While `MODEL_MODE=fake` the app shows "Demo mode: recorded model output". Do not describe recorded output as live, and do not state accuracy or speed figures that have not been measured.
 9. **Wording.** Say "tamper-evident", never "tamper-proof". Tamper evidence is not proof that the original chat was genuine. VeriDoc is a drafting and record-keeping aid, not legal advice.
-10. **Rename words, not data.** "Case" becomes "agreement" and roles show as "party" and "reviewer" on screen only. Do not rename database columns, `Role` enum values or audit action strings, and do not add a Prisma migration, without a new ADR (ADR-037, ADR-039). Stop and ask if a change would alter an existing hash, audit format or migration.
+10. **Rename words, not data.** "Case" becomes "agreement" and roles show as "Party", "Reviewer" and "Verifier" on screen only. Do not rename database columns, `Role` enum values or audit action strings, and do not add a Prisma migration, without a new ADR (ADR-037, ADR-039). Stop and ask if a change would alter an existing hash, audit format or migration.
 11. **No secrets, no weights in the repo.** Model files are checked against `models/manifest.json` and are git-ignored. Sample data is synthetic: no real names, numbers or addresses.
 12. **Specs first.** If a change touches hashing, the proof format or the verify logic, update `docs/03` and the test vectors in the same change. Record non-obvious choices in `docs/DECISIONS.md`. Never skip, weaken or delete a test to make it pass.
 
@@ -26,7 +26,9 @@ Where a task and these rules disagree, stop and ask the developer.
 
 ## Git and GitHub — read this carefully
 
-**You do not have permission to push to GitHub, create branches on a remote, open pull requests, or run any `gh` CLI command, under any circumstance.** All GitHub actions (push, pull requests, remote settings) are performed by the human developer only. This is enforced at the permissions level (see `.claude/settings.json`) — if a denied command is blocked, do not attempt a workaround (no `curl` to the GitHub API, no alternate git remote, nothing). Local git operations (`git init`, `git add`, `git commit`, `git status`, `git log`, `git diff`, local branches) inside the working directory are fine. Never use `--no-verify`. The base branch is `dev`.
+**You do not have permission to push to GitHub, create branches on a remote, open pull requests, or run any `gh` CLI command, under any circumstance.** All GitHub actions (push, pull requests, remote settings) are performed by the human developer only. This is enforced at the permissions level (see `.claude/settings.json`) — if a denied command is blocked, do not attempt a workaround (no `curl` to the GitHub API, no alternate git remote, nothing). Local git operations (`git init`, `git add`, `git commit`, `git status`, `git log`, `git diff`, local branches) inside the working directory are fine. Never use `--no-verify`.
+
+**Branch model: `main` only.** There is no `dev` branch. Create each task branch from `main` (for example `feat/<name>` or `docs/<name>`), commit locally, and stop. The developer merges into `main` and pushes. Do not merge into `main` yourself.
 
 ## After every work session
 
@@ -46,7 +48,7 @@ The vault (crypto-core, anchoring, verify page, redaction, sharing) is inherited
 1. UI wording and seed data (words only).
 2. Chat import and term extraction with grounding (`docs/AI_SPEC.md`).
 3. Flags, recommendation, recap, echo code.
-4. Chat record builder: save the record as an ordinary PDF through the normal upload (ADR-040, proposed — needs a human decision first).
+4. Chat record builder: save the record as an ordinary PDF through the normal upload (ADR-040, accepted: text PDFs only; scanned PDFs show "not supported yet").
 5. Local model behind the adapter (a model must be chosen and pinned first).
 6. Remove the BNSS and BSA features.
 7. Role and schema rename: **skipped** (ADR-039).

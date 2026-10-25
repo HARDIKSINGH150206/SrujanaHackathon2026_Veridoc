@@ -54,8 +54,8 @@ The sample chats in `samples/veridoc/` are synthetic stand-ins of the same shape
 | | Party | Other side | Reviewer |
 |---|---|---|---|
 | Who | The person running VeriDoc: a small supplier, freelancer, tutor. | The other person in the deal. Has WhatsApp, installs nothing. | A lawyer, accountant, mediator, or anyone checking a record. |
-| Shown in the UI as | "party" | not a user | "reviewer" |
-| Underlying role | `POLICE_OFFICER` or `INVESTIGATING_OFFICER` | none | `COURT_OFFICIAL` or `FORENSIC_LAB` (read-only) |
+| Shown in the UI as | "Party" | not a user | "Reviewer" or "Verifier" |
+| Underlying role | `POLICE_OFFICER` or `INVESTIGATING_OFFICER` | none | `COURT_OFFICIAL` (shown "Reviewer") or `FORENSIC_LAB` (shown "Verifier"), both read-only |
 | Needs | Know what is missing before it hurts; keep proof. | A short message to read and confirm. | See that a record is unchanged and what it contains. |
 
 The `Role` enum values do not change (ADR-037, ADR-039). Only the words on screen do. `ADMIN` keeps its name.
@@ -174,7 +174,7 @@ Status as of this document. "Real" means it runs in this repository today. The d
 | Flags and recommendation | | Not built |
 | Recap and echo code | | Not built |
 | Voice notes | | Not built. Transcripts would be pre-recorded for the demo |
-| Chat saved to the vault | | Not built (design in `ARCHITECTURE.md`, ADR-040 proposed) |
+| Chat saved to the vault | | Not built (design in `ARCHITECTURE.md`, ADR-040 accepted) |
 
 ## 9. Non-functional requirements
 
@@ -197,7 +197,5 @@ Status as of this document. "Real" means it runs in this repository today. The d
 ## 11. Open questions
 
 - Which local model to pin in `models/manifest.json`, and on what hardware it must run (`TECH_STACK.md` section 3).
-- Whether `POLICE_OFFICER` and `INVESTIGATING_OFFICER` both show as "party", and who the "reviewer" accounts are in the demo (`TRIM_PLAN.md` section 2).
-- Whether the chat record is saved as an ordinary PDF through the normal upload (ADR-040, proposed).
 - The individual organiser's name and the written confirmation of the reuse (`PRIOR_WORK.md`).
 - Whether the `quote` field is added to the adapter and the recordings before the term extractor is built (`AI_SPEC.md` section 11).

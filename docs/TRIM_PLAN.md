@@ -26,8 +26,9 @@ Ground rules (ADR-037, ADR-039):
 | Now | Becomes | Where |
 |---|---|---|
 | case, case file | agreement | Dashboard, case view, new-case form, upload view, landing page, share panel |
-| Police Officer, Investigating Officer | party | Role labels in `shell.tsx` and the dashboard |
-| Court Official, Forensic Lab | reviewer | Role labels |
+| Police Officer, Investigating Officer | Party | Role labels in `shell.tsx` and the dashboard |
+| Court Official | Reviewer | Role labels |
+| Forensic Lab | Verifier | Role labels |
 | Admin | admin (unchanged) | |
 | "Good morning, Officer." | a neutral greeting | `shell.tsx` |
 | Court Verification Portal | Verify page | `apps/web/src/app/verify/page.tsx` text, docs |
@@ -35,7 +36,7 @@ Ground rules (ADR-037, ADR-039):
 | victim_name and similar entity labels shown in the redaction screen | neutral labels such as "person name" | UI text only; the stored `entityType` values do not change |
 | Demo accounts and demo cases | agreement-style names | `seed-demo.ts`, `prisma/seed-for-testing.mjs` and the scripts that read them |
 
-Role mapping for the screen: `POLICE_OFFICER` and `INVESTIGATING_OFFICER` show as "party" (they can upload, confirm and share); `COURT_OFFICIAL` and `FORENSIC_LAB` show as "reviewer" (read-only). Open question: whether `POLICE_OFFICER` needs a different label from `INVESTIGATING_OFFICER`, which today differ only in sharing and anchoring rights.
+Role labels on screen (decided 2026-10-26, labels only): `POLICE_OFFICER` and `INVESTIGATING_OFFICER` show as "Party" (they can upload, confirm and share); `COURT_OFFICIAL` shows as "Reviewer" and `FORENSIC_LAB` as "Verifier" (both read-only). `ADMIN` is unchanged.
 
 Files with the most old wording (counts from the scan): `prisma/seed-demo.ts`, `investigation-dashboard.tsx`, `smoke-test.mjs`, `eval/fixtures.py`, `landing.tsx`, `real_suggestions.py`, `golden-path.mjs`, `case-view.tsx`, `custody-graph.tsx`, `login/page.tsx`.
 

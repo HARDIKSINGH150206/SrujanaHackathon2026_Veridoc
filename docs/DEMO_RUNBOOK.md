@@ -35,7 +35,7 @@ Anchoring needs `AMOY_RPC_URL` in `apps/web/.env.local` and a funded anchoring k
 | # | Check |
 |---|---|
 | 1 | Start with the command in section 2. Badge visible. |
-| 2 | Demo accounts exist (`cd apps/web && node --experimental-strip-types prisma/seed-demo.ts`). The roles show as party and reviewer after `TRIM_PLAN.md` step 1. |
+| 2 | Demo accounts exist (`cd apps/web && node --experimental-strip-types prisma/seed-demo.ts`). The roles show as Party, Reviewer and Verifier after `TRIM_PLAN.md` step 1. |
 | 3 | Wallet has Amoy test POL (about 0.003 per document anchor; `docs/05`). |
 | 4 | **Pre-anchor one record** (section 4, steps 8 to 10) so a verified receipt is ready before going on stage. |
 | 5 | Save the receipt files for that record in a known folder, and a copy of one page with a single pixel changed for the tamper test (the command is in `docs/05-demo-golden-path.md`, section 3). |

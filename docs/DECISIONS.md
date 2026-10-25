@@ -275,8 +275,8 @@ To add one: copy the template at the bottom, take the next number, never renumbe
 ## ADR-037 — Rename in the UI only
 **Status:** Accepted (2026-10-25)
 **Context:** The screens say "case", "officer", "court" and so on. VeriDoc is about agreements between two people.
-**Decision:** Change wording only: "case" becomes "agreement"; roles show as "party" (`POLICE_OFFICER`, `INVESTIGATING_OFFICER`) and "reviewer" (`COURT_OFFICIAL`, `FORENSIC_LAB`); "Court Verification Portal" becomes "Verify page". The front end and the redaction screens (tiles, preview, confirm, share link, verify page) keep their behaviour and layout.
-**Consequences:** Low risk and reversible. Code identifiers, routes, table and column names keep the old words. The mapping of two roles onto "party" is an open question (`docs/TRIM_PLAN.md`). See ADR-039 for what must not change.
+**Decision:** Change wording only: "case" becomes "agreement"; roles show as "Party" (`POLICE_OFFICER`, `INVESTIGATING_OFFICER`), "Reviewer" (`COURT_OFFICIAL`) and "Verifier" (`FORENSIC_LAB`); `ADMIN` keeps its name; "Court Verification Portal" becomes "Verify page". The front end and the redaction screens (tiles, preview, confirm, share link, verify page) keep their behaviour and layout.
+**Consequences:** Low risk and reversible. Code identifiers, routes, table and column names keep the old words. The label mapping was decided by the developer on 2026-10-26 and is labels only. See ADR-039 for what must not change.
 
 ## ADR-038 — Fake model first, behind a model adapter; local model later
 **Status:** Accepted (2026-10-25); implemented for the fake adapter, local adapter is a stub
@@ -291,8 +291,8 @@ To add one: copy the template at the bottom, take the next number, never renumbe
 **Consequences:** Some code and the audit page keep old words internally. That is accepted. The high-risk rename step in `docs/TRIM_PLAN.md` is skipped.
 
 ## ADR-040 — The chat is saved as an ordinary PDF through the normal upload
-**Status:** Proposed (needs a human decision)
+**Status:** Accepted (2026-10-26, decided by the developer)
 **Context:** The vault hashes rendered document pages. A chat is text, and voice notes are audio. Adding a new kind of evidence to the hash path would change the proof format, which `CLAUDE.md` forbids without the spec process.
-**Decision (proposed):** The browser builds a PDF of the agreement record (numbered messages, the SHA-256 of the original export and of each voice-note file printed on the first page; later the confirmed terms, the recap and the pasted confirmation) and uploads it through `POST /api/v1/evidence/upload`. Each later step is a new version of the same `document_id`. The existing pipeline then hashes, chains, anchors and audits it with no change. The AI service never sees or writes this path.
-**Consequences:** No new hash format and no migration. Voice-note audio itself is covered only by the fingerprint on the page, not stored by the vault. Pending (unconfirmed) terms are not stored anywhere; they live on the review screen. Not built yet.
+**Decision:** The browser builds a PDF of the agreement record (numbered messages, the SHA-256 of the original export and of each voice-note file printed on the first page; later the confirmed terms, the recap and the pasted confirmation) and uploads it through `POST /api/v1/evidence/upload`. Each later step is a new version of the same `document_id`. The existing pipeline then hashes, chains, anchors and audits it with no change. The AI service never sees or writes this path.
+**Consequences:** No new hash format and no migration. Voice-note audio itself is covered only by the fingerprint on the page, not stored by the vault. Pending (unconfirmed) terms are not stored anywhere; they live on the review screen. Text PDFs only: a PDF with no extractable text (a scan) is refused with the message "not supported yet". A text PDF is also accepted as a chat source: its text is read, numbered and analysed like an export. Not built yet.
 
