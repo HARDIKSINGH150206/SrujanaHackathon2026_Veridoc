@@ -99,7 +99,7 @@ async function portal(browser, files) {
   await page.click('button:has-text("Verify")');
   await page.waitForFunction(() => !document.body.innerText.includes("Checking blockchain record"), null, { timeout: 90000 });
   const verdict = (await page.locator(".result-card h2").first().textContent()) ?? "";
-  const official = (await page.locator("text=Verified against official DigiVault contract").count()) > 0;
+  const official = (await page.locator("text=Verified agreement record").count()) > 0;
   await page.screenshot({ path: path.join(OUT, `verify-${verdict.split(" ")[0].toLowerCase()}.png`), fullPage: true });
   await ctx.close();
   if (apiCalls.length) throw new Error(`/verify called the app's API: ${apiCalls.join(", ")}`);
