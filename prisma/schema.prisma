@@ -1,0 +1,286 @@
+// DigiVault database schema — source of truth for all migrations.
+// Run `npx prisma migrate dev --name init` after this file is finalized
+// to generate the actual SQL migration; don't hand-write migrations.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  POLICE_OFFICER
+  INVESTIGATING_OFFICER
+  COURT_OFFICIAL
+  FORENSIC_LAB
+  ADMIN
+}
+
+enum DocumentSourceType {
+  SCANNED
+  NATIVE_PDF
+}
+
+enum DocumentStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
+// Anchor state lives on AnchorLog, not DocumentVersion: a version whose
+// on-chain anchor failed is still a valid, fully hashed upload.
+enum AnchorStatus {
+  PENDING
+  ANCHORED
+  FAILED
+}
+
+model User {
+  id            String   @id @default(cuid())
+  role          Role
+  department    String
+  authIdentity  String   @unique
+  // Nullable so the migration can run over pre-existing users; a user with
+  // no serviceNumber/pinHash simply cannot log in until re-seeded.
+  serviceNumber String?  @unique
+  pinHash       String?
+  mfaStatus     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  casesCreated        Case[]               @relation("CaseCreatedBy")
+  uploads             DocumentVersion[]
+  auditEntries        AuditLog[]
+  sharesCreated       DocumentShare[]      @relation("ShareCreatedBy")
+  redactionsReviewed  RedactionFlag[]      @relation("RedactionReviewer")
+  webauthnCredentials WebAuthnCredential[]
+}
+
+model WebAuthnCredential {
+  id           String   @id @default(cuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  credentialId String   @unique // base64url
+  publicKey    Bytes
+  counter      Int
+  createdAt    DateTime @default(now())
+}
+
+model Case {
+  id              String    @id @default(cuid())
+  caseNumber      String    @unique
+  caseType        String
+  status          String
+  department      String
+  createdBy       User      @relation("CaseCreatedBy", fields: [createdById], references: [id])
+  createdById     String
+  createdAt       DateTime  @default(now())
+  // BNSS s.193(2) deadline tracking (docs/07 Phase 7). Both optional:
+  // existing cases have neither, and the deadline clock only runs when set.
+  firRegisteredAt DateTime?
+  offenceSections String[]  @default([]) // e.g. "BNS 64", "POCSO 4"
+
+  documents Document[]
+  gazetteer CaseGazetteerEntry[]
+}
+
+model Document {
+  id               String             @id @default(cuid())
+  case             Case               @relation(fields: [caseId], references: [id])
+  caseId           String
+  title            String
+  docType          String
+  sourceType       DocumentSourceType
+  uploaderId       String
+  currentVersionId String?
+  createdAt        DateTime           @default(now())
+
+  versions DocumentVersion[]
+  tiles    Tile[]
+  shares   DocumentShare[]
+}
+
+model DocumentVersion {
+  id           String         @id @default(cuid())
+  document     Document       @relation(fields: [documentId], references: [id])
+  documentId   String
+  versionNo    Int
+  merkleRoot   String
+  clientHash   String
+  storageUri   String
+  previousHash String?
+  chainHash    String
+  gridSize     Int            @default(20)
+  uploadedBy   User           @relation(fields: [uploadedById], references: [id])
+  uploadedById String
+  status       DocumentStatus @default(PROCESSING)
+  isRedacted   Boolean        @default(false)
+  timestamp    DateTime       @default(now())
+  // Proof format (ADR-021). 1 = legacy: unsalted leaves, merkletreejs,
+  // merkleRoot is the anchored value. 2 = salted leaves, RFC 6962 trees:
+  // merkleRoot holds the document root R and `commitment` holds
+  // C = H(0x03 ‖ clientHash ‖ R), the value anchored on-chain (docs/03 §v2).
+  proofVersion Int            @default(1)
+  commitment   String?
+
+  anchors AnchorLog[]
+  tiles   Tile[]
+  salts   VersionSaltSet?
+
+  @@unique([documentId, versionNo])
+}
+
+model Tile {
+  id                String           @id @default(cuid())
+  document          Document         @relation(fields: [documentId], references: [id])
+  documentId        String
+  // The version these tile hashes belong to. Nullable only because rows
+  // written before per-version tiles (ADR-024) for superseded versions were
+  // already deleted; the migration backfills current-version rows, and all
+  // new rows set it. See lib/tiles-repo.ts.
+  documentVersion   DocumentVersion? @relation(fields: [documentVersionId], references: [id])
+  documentVersionId String?
+  tileIndex         Int
+  pageIndex         Int
+  row               Int
+  col               Int
+  tileHash          String
+  merkleLeafIndex   Int
+
+  redactionFlags RedactionFlag[]
+
+  @@unique([documentVersionId, tileIndex])
+}
+
+model RedactionFlag {
+  id              String    @id @default(cuid())
+  tile            Tile      @relation(fields: [tileId], references: [id])
+  tileId          String
+  entityType      String // e.g. "victim_name", "phone", "address"
+  confidenceScore Float
+  masked          Boolean   @default(false)
+  source          String // "text_layer" | "bhashini_ocr" | "indicner" | "gazetteer"
+  // Keyed hashes of the names this tile covers (ADR-034), never the names
+  // themselves. A tile can span two text lines, so it can hold two names.
+  // Confirming the tile adds them to the case gazetteer.
+  nameHashes      String[]  @default([])
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewer        User?     @relation("RedactionReviewer", fields: [reviewedBy], references: [id])
+}
+
+// Insert-only by convention — application layer must never expose
+// update/delete for this model. Enforce with a DB-level REVOKE on the
+// app's connection role as well; do not rely on Prisma alone for this.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor      User     @relation(fields: [actorId], references: [id])
+  actorId    String
+  action     String
+  targetId   String
+  targetType String?
+  targetMeta Json?
+  timestamp  DateTime @default(now())
+  sourceIp   String
+  // Hash chain (ADR-020, docs/07 P0.4). Set at INSERT by lib/audit.ts —
+  // the app role can't UPDATE this table. NULL on rows written before the
+  // chain existed; the chain starts at seq 1 with prevHash = 64 zeros.
+  seq        Int?     @unique
+  prevHash   String?
+  entryHash  String?
+}
+
+model AnchorLog {
+  id                String          @id @default(cuid())
+  documentVersion   DocumentVersion @relation(fields: [documentVersionId], references: [id])
+  documentVersionId String
+  chainRootHash     String
+  anchoredAt        DateTime        @default(now())
+  objectLockUri     String
+  polygonTxHash     String?
+  // Hash of the tx as soon as it is sent, before the receipt. Lets a retry
+  // recognise an anchor that landed even though this attempt saw an error.
+  submittedTxHash   String?
+  // The EvidenceAnchor contract this attempt wrote to (v1 legacy or v2,
+  // ADR-028). Null only on attempts that failed before choosing one.
+  contractAddress   String?
+  // Audit-log head seq anchored in the same tx (contract v2 only), or null.
+  auditSeq          Int?
+  status            AnchorStatus    @default(PENDING)
+  errorMessage      String?
+}
+
+// One attempt to anchor the audit-log head on its own (docs/07 Phase 4,
+// ADR-030): EvidenceAnchorV2.anchorAuditHead(seq, entryHash). Heads also
+// ride along on document anchors (AnchorLog.auditSeq). Not audited itself:
+// an audit row per anchor would always leave a newer, unanchored head.
+model AuditHeadAnchor {
+  id              String       @id @default(cuid())
+  seq             Int
+  entryHash       String
+  createdAt       DateTime     @default(now())
+  // Copy of the head in the Object-Locked anchor bucket (CLAUDE.md rule 3).
+  objectLockUri   String?
+  submittedTxHash String?
+  polygonTxHash   String?
+  blockNumber     Int?
+  contractAddress String?
+  status          AnchorStatus @default(PENDING)
+  errorMessage    String?
+
+  @@index([seq])
+}
+
+model DocumentShare {
+  id             String    @id @default(cuid())
+  document       Document  @relation(fields: [documentId], references: [id])
+  documentId     String
+  createdBy      String
+  createdByUser  User      @relation("ShareCreatedBy", fields: [createdBy], references: [id])
+  token          String    @unique @default(cuid())
+  recipientLabel String
+  expiresAt      DateTime
+  maxViews       Int       @default(3)
+  viewCount      Int       @default(0)
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+// Per-tile leaf salts for one version (ADR-018), encrypted as one blob:
+// AES-256-GCM over the 32-byte salts concatenated in tileIndex order, with
+// "<documentVersionId>|<tileCount>" as associated data so a blob can't be
+// moved to another version. Salts are evidence — losing them makes the
+// version's anchored commitment unverifiable — so the app role has UPDATE
+// and DELETE revoked (migration 20261018130000_tile_salts). Masked-tile
+// salts never leave the server (lib/tile-salts.ts: revealableSalts).
+model VersionSaltSet {
+  id                String          @id @default(cuid())
+  documentVersion   DocumentVersion @relation(fields: [documentVersionId], references: [id])
+  documentVersionId String          @unique
+  tileCount         Int
+  keyId             String
+  iv                Bytes
+  ciphertext        Bytes
+  authTag           Bytes
+  createdAt         DateTime        @default(now())
+}
+
+// Case gazetteer (docs/07 Phase 6, ADR-034): names an officer confirmed for
+// redaction in one of the case's documents, flagged in its other documents.
+// Only HMAC-SHA256(per-case key, normalised name) is stored; the per-case key
+// is derived from GAZETTEER_KEY, so the same name hashes differently in
+// another case. Insert-only for the app role (migration revokes UPDATE/DELETE).
+model CaseGazetteerEntry {
+  id              String   @id @default(cuid())
+  case            Case     @relation(fields: [caseId], references: [id])
+  caseId          String
+  nameHash        String
+  keyId           String
+  sourceVersionId String
+  createdById     String
+  createdAt       DateTime @default(now())
+
+  @@unique([caseId, keyId, nameHash])
+}

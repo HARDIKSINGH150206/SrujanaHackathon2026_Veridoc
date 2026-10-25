@@ -1,0 +1,149 @@
+// Shared steps for the e2e-part*.mjs Playwright scripts. Credentials are the
+// ones prisma/seed-for-testing.mjs creates; run that first.
+import { PDFDocument, StandardFonts } from "pdf-lib";
+import { writeFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+export const BASE = process.env.E2E_BASE_URL ?? "http://localhost:3000";
+export const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
+
+export const INVESTIGATING_OFFICER = { serviceNumber: "DL/2019/3301", pin: "223344" };
+
+/**
+ * A PDF with text the AI service reliably flags (a name, a phone number),
+ * so the redaction-suggestion step has something to select.
+ */
+export async function makeTestPdf(fileName, title, pageCount = 1) {
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  for (let i = 0; i < pageCount; i++) {
+    const page = doc.addPage([595, 842]);
+    page.drawText(`${title} — page ${i + 1}`, { x: 50, y: 780, size: 16, font });
+    page.drawText("Complainant Priya Sharma stated the incident occurred near the market area.", { x: 50, y: 740, size: 11, font });
+    page.drawText("Contact number of the complainant: 9876543210.", { x: 50, y: 720, size: 11, font });
+  }
+  const outPath = path.join(SCRIPTS_DIR, fileName);
+  writeFileSync(outPath, await doc.save());
+  return outPath;
+}
+
+export function logBrowserErrors(page, tag = "browser") {
+  page.on("pageerror", (err) => console.error(`[${tag}:pageerror]`, err));
+  page.on("console", (msg) => {
+    if (msg.type() === "error") console.error(`[${tag}:console:error]`, msg.text());
+  });
+}
+
+export async function login(page, { serviceNumber, pin } = INVESTIGATING_OFFICER) {
+  await page.goto(`${BASE}/login`);
+  await page.fill("#service-number", serviceNumber);
+  await page.fill("#pin", pin);
+  await page.click('button[type="submit"]');
+  await page.waitForURL(/\/dashboard$/, { timeout: 30000 });
+}
+
+/** Creates a case from the dashboard and opens it. Returns the case number. */
+export async function createAndOpenCase(page, prefix) {
+  const caseNumber = `${prefix}/${Date.now()}`;
+  await page.click('button:has-text("New Case")');
+  await page.getByLabel("Case number").fill(caseNumber);
+  await page.getByLabel("Case type").fill("FIR");
+  await page.getByLabel("Department").fill("Women Safety Division");
+  await page.click('button:has-text("Create case")');
+  const link = page.getByRole("link", { name: caseNumber, exact: true }).first();
+  await link.waitFor({ timeout: 15000 });
+  await link.click();
+  await page.waitForURL(/\/dashboard\/cases\/[^/]+$/, { timeout: 15000 });
+  return caseNumber;
+}
+
+/** Uploads a PDF from the open case page; resolves on the new version page. */
+export async function uploadDocument(page, pdfPath, title) {
+  await page.click('a:has-text("Upload document")');
+  await page.waitForURL(/\/upload$/, { timeout: 15000 });
+  await page.getByLabel("Document title").fill(title);
+  await page.setInputFiles('input[type="file"]', pdfPath);
+  await page.click('button[type="submit"]');
+  await page.waitForURL(/\/dashboard\/documents\/.+\/versions\/.+$/, { timeout: 60000 });
+  return page.url();
+}
+
+/** Selects the first group of AI suggestions and finalizes it. Resolves on the redacted version's page. */
+export async function confirmFirstSuggestion(page, stepUp) {
+  const v1Url = page.url();
+  try {
+    await page.waitForSelector("li input[type=checkbox]", { timeout: 30000 });
+  } catch {
+    throw new Error("No AI redaction suggestions appeared — is apps/ai-service running (AI_SERVICE_URL)?");
+  }
+  await page.locator("li input[type=checkbox]").first().check();
+  await page.locator("button", { hasText: /^Review \d+ selected areas?$/ }).click();
+  await page.click('button:has-text("Create redacted version")');
+  await stepUp(page);
+  await page.waitForFunction((oldUrl) => window.location.href !== oldUrl, v1Url, { timeout: 30000 });
+  return page.url();
+}
+
+/** Anchoring is automatic; wait for the indicator to settle. Returns "ANCHORED" or "FAILED". */
+export async function waitForAnchor(page, timeout = 120000) {
+  const settled = page.locator(".wsv-status-title", { hasText: /Anchored on Polygon Amoy|Anchoring failed|Anchoring did not complete/ });
+  await settled.first().waitFor({ timeout });
+  const text = await settled.first().textContent();
+  return text.includes("Anchored on Polygon") ? "ANCHORED" : "FAILED";
+}
+
+// --- Step-up ("Verify your identity") ---------------------------------------
+
+/**
+ * Gives the page a platform authenticator with a passing fingerprint /
+ * Face ID check, via Chrome DevTools' WebAuthn domain.
+ */
+export async function addVirtualAuthenticator(context, page) {
+  const cdp = await context.newCDPSession(page);
+  await cdp.send("WebAuthn.enable");
+  await cdp.send("WebAuthn.addVirtualAuthenticator", {
+    options: { protocol: "ctap2", transport: "internal", hasResidentKey: true, hasUserVerification: true, isUserVerified: true },
+  });
+}
+
+/**
+ * Passes the dialog with WebAuthn, enrolling (with the PIN) the first time.
+ * If the account already has a passkey from an earlier run, this run's
+ * virtual authenticator can't answer for it and the assertion fails; the
+ * test then takes the same "New device?" path an officer with a new phone
+ * would, and registers this authenticator.
+ */
+export function stepUpWithBiometric(pin = INVESTIGATING_OFFICER.pin) {
+  return async (page) => {
+    await page.waitForSelector("text=Verify your identity");
+    await page.click('[role=dialog] button:has-text("Use fingerprint / Face ID")');
+    const enroll = page.locator("text=No fingerprint / Face ID is set up");
+    const newDevice = page.locator('[role=dialog] button:has-text("New device?")');
+    const closed = page.locator("text=Verify your identity");
+    // A failed assertion can take up to the WebAuthn timeout (60 s) to surface.
+    const timeout = 90000;
+    await Promise.race([enroll.waitFor({ timeout }), newDevice.waitFor({ timeout }), closed.waitFor({ state: "detached", timeout })]);
+    if (await newDevice.isVisible().catch(() => false)) {
+      await newDevice.click();
+      await page.fill("#step-up-pin", pin);
+      await page.click('button:has-text("Register fingerprint / Face ID")');
+    } else if (await enroll.isVisible().catch(() => false)) {
+      await page.fill("#step-up-pin", pin);
+      await page.click('button:has-text("Register fingerprint / Face ID")');
+    }
+    await closed.waitFor({ state: "detached", timeout: 30000 });
+  };
+}
+
+/** Passes the dialog with the PIN fallback. */
+export function stepUpWithPin(pin = INVESTIGATING_OFFICER.pin) {
+  return async (page) => {
+    await page.waitForSelector("text=Verify your identity");
+    const usePin = page.locator('[role=dialog] button:has-text("Use PIN instead")');
+    if (await usePin.isVisible().catch(() => false)) await usePin.click();
+    await page.fill("#step-up-pin", pin);
+    await page.click('button:has-text("Verify PIN")');
+    await page.locator("text=Verify your identity").waitFor({ state: "detached", timeout: 30000 });
+  };
+}
