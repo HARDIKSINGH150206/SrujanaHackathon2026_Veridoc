@@ -44,9 +44,9 @@ The AI only suggests. It never writes to the vault, the audit log or the hash pa
 | `docs/DEMO_RUNBOOK.md` | Click-by-click demo, one-command start, offline fallback |
 | `docs/PRIOR_WORK.md` | What was imported from DigiVault |
 | `docs/02`, `docs/03` | Integrity references (data flow, hashing and Merkle spec) |
-| `docs/DEVELOPMENT.md` | Full developer guide |
+| `docs/digivault-archive/` | Pre-event DigiVault documents: developer guide (`DEVELOPMENT.md`), API spec, demo path, redaction measurements, and the rest (see its README) |
 
-`docs/01`, `04`, `05`, `06`, `07`, `08` and `DEVELOPMENT.md` are DigiVault documents and still carry its original wording (`docs/TRIM_PLAN.md` section 6).
+The documents in `docs/digivault-archive/` are DigiVault's, written before the hackathon. They are accurate for the inherited vault and still carry its original wording.
 
 ## Tech stack
 
@@ -85,7 +85,7 @@ cp apps/web/.env.example apps/web/.env.local
 cp packages/contracts/.env.example packages/contracts/.env
 ```
 
-Fill in `apps/web/.env.local` (`DATABASE_URL` for the `digivault_app` role, `AUTH_SESSION_SECRET`, `AMOY_RPC_URL`, `SALT_ENCRYPTION_KEY`) and `packages/contracts/.env` (`AMOY_RPC_URL`, `DEPLOYER_PRIVATE_KEY`; never commit it). `docs/DEVELOPMENT.md` section 3 lists every variable. Leave `MODEL_MODE=fake`. The AI service reads plain environment variables (it has no `.env` loader), so export any of its settings before starting it, as the start command below does for `MODEL_MODE`.
+Fill in `apps/web/.env.local` (`DATABASE_URL` for the `digivault_app` role, `AUTH_SESSION_SECRET`, `AMOY_RPC_URL`, `SALT_ENCRYPTION_KEY`) and `packages/contracts/.env` (`AMOY_RPC_URL`, `DEPLOYER_PRIVATE_KEY`; never commit it). `docs/digivault-archive/DEVELOPMENT.md` section 3 lists every variable. Leave `MODEL_MODE=fake`. The AI service reads plain environment variables (it has no `.env` loader), so export any of its settings before starting it, as the start command below does for `MODEL_MODE`.
 
 ```bash
 pnpm exec prisma migrate deploy
@@ -103,7 +103,7 @@ cd apps/web && node --experimental-strip-types prisma/seed-demo.ts && cd ../..  
 docker compose up -d && (cd apps/ai-service && MODEL_MODE=fake .venv/bin/uvicorn app.main:app --port 8001 &) && MODEL_MODE=fake pnpm --filter @digivault/web dev
 ```
 
-Open http://localhost:3000. The "Demo mode: recorded model output" badge should show on every page. WebAuthn needs a secure context: use `http://localhost` or HTTPS. Demo accounts are listed in `docs/05-demo-golden-path.md` section 1.
+Open http://localhost:3000. The "Demo mode: recorded model output" badge should show on every page. WebAuthn needs a secure context: use `http://localhost` or HTTPS. Demo accounts are listed in `docs/digivault-archive/05-demo-golden-path.md` section 1.
 
 ### Tests
 
@@ -113,7 +113,7 @@ cd apps/ai-service && python3 -m unittest tests.test_settings tests.test_model_a
   tests.test_model_manifest tests.test_samples              # settings, adapter, manifest, samples
 ```
 
-The other AI-service tests (`tests/test_patterns.py` and friends) need the virtual environment: `.venv/bin/python -m unittest discover -s tests -t .`. End-to-end scripts are in `docs/DEVELOPMENT.md` section 4.
+The other AI-service tests (`tests/test_patterns.py` and friends) need the virtual environment: `.venv/bin/python -m unittest discover -s tests -t .`. End-to-end scripts are in `docs/digivault-archive/DEVELOPMENT.md` section 4.
 
 Settings (`MODEL_MODE`, `MODEL_FILE_PATH`, `MODEL_SHA256`, `LLAMA_SERVER_PATH`, `PLAYBOOK_DIR`, `REDACTION_RULES_FILE`, `SHARE_LINK_TTL_HOURS`, `DATA_DIR`, `DEMO_MODE_BADGE`) are documented in the `.env.example` files and `docs/TECH_STACK.md`.
 

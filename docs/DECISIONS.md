@@ -66,7 +66,7 @@ To add one: copy the template at the bottom, take the next number, never renumbe
 ## ADR-011 — Service Number + PIN with WebAuthn step-up; no Aadhaar
 **Status:** Accepted
 **Decision:** bcrypt PIN login with lockout; 5-minute step-up tokens via WebAuthn (PIN fallback) for sensitive actions. Aadhaar login is out of scope (needs UIDAI accreditation).
-**Consequences:** PIN fallback weakens step-up to PIN strength — open item in `docs/04`.
+**Consequences:** PIN fallback weakens step-up to PIN strength — open item in `docs/digivault-archive/04`.
 
 ## ADR-012 — Background anchoring that never fails the upload
 **Status:** Accepted
@@ -89,7 +89,7 @@ To add one: copy the template at the bottom, take the next number, never renumbe
 
 ---
 
-## v2 decisions (see `docs/07-v2-build-plan.md`)
+## v2 decisions (see `docs/digivault-archive/07-v2-build-plan.md`)
 
 ## ADR-016 — RFC 6962 domain-separated Merkle tree with per-page roots
 **Status:** Accepted for v2
@@ -173,20 +173,20 @@ To add one: copy the template at the bottom, take the next number, never renumbe
 
 ## ADR-029 — Redaction proofs: format, original version, masked set
 **Status:** Accepted (2026-10-19), implemented (Phase 3)
-**Context:** docs/07 Phase 3 sketched the file and the verifier algorithm. Left open: which version a redacted copy is proved against when redactions are chained, how a changed tile is named, how the masking is done so unmasked pixels survive exactly, and what happens for a v1 original.
+**Context:** docs/digivault-archive/07 Phase 3 sketched the file and the verifier algorithm. Left open: which version a redacted copy is proved against when redactions are chained, how a changed tile is named, how the masking is done so unmasked pixels survive exactly, and what happens for a v1 original.
 **Decision:**
 - Proved against the nearest earlier unredacted version; the masked set is the union of `RedactionFlag.masked` over every redaction step since then.
 - Each page carries all of the original's leaves (`originalLeaves`) instead of the plan's `maskedLeaves`: masked entries are inputs, unmasked ones are hints that let the portal name a changed tile. The redacted version's own salts are included too, so one file verifies both anchors.
 - `redactPagePng` fills masked tiles in the raw RGBA and re-encodes, instead of compositing an SVG, so unmasked pixels are copied bit-for-bit and the mask is exactly `[0, 0, 0, 255]`.
 - The server runs the same check as the portal on every proof before serving it.
 - v1 originals are refused (`LEGACY_ORIGINAL`): their leaves are unsalted.
-**Consequences:** A recipient needs only the redacted PNGs and `redaction-proof.json`. A re-encoded copy fails (the redacted version's own commitment binds the PNG bytes). Redacted versions created before this change used SVG compositing; they verify if their pages were fully opaque, which pdf.js renders are. Share links serve the redaction proof and the redacted page PNGs as well as the PDF (docs/04 §7); the PDF alone can't be verified.
+**Consequences:** A recipient needs only the redacted PNGs and `redaction-proof.json`. A re-encoded copy fails (the redacted version's own commitment binds the PNG bytes). Redacted versions created before this change used SVG compositing; they verify if their pages were fully opaque, which pdf.js renders are. Share links serve the redaction proof and the redacted page PNGs as well as the PDF (docs/digivault-archive/04 §7); the PDF alone can't be verified.
 
 ---
 
 ## ADR-030 — Audit-log anchoring: schedule, records, refusal, verification
 **Status:** Accepted (2026-10-19), implemented (Phase 4); live Amoy run done 2026-10-20 (seq 337, block 50692857)
-**Context:** docs/07 Phase 4: anchor the audit head every 6 h on its own, skipped when nothing is new; keep a MinIO copy; a check and an admin view. Left open: where the schedule runs, how a standalone anchor is recorded without making the next run never skip, what to do when the database disagrees with the chain, and how a full rewrite (all hashes recomputed) is located.
+**Context:** docs/digivault-archive/07 Phase 4: anchor the audit head every 6 h on its own, skipped when nothing is new; keep a MinIO copy; a check and an admin view. Left open: where the schedule runs, how a standalone anchor is recorded without making the next run never skip, what to do when the database disagrees with the chain, and how a full rewrite (all hashes recomputed) is located.
 **Decision:**
 - The schedule runs inside the Next.js server (`src/instrumentation.ts`, `lib/audit-anchor.ts`), every `AUDIT_ANCHOR_INTERVAL_HOURS` (default 6, `0` = off), first run one interval after start. It shares the document-anchor send queue, and reads both heads inside it.
 - Standalone anchors are recorded in a new `AuditHeadAnchor` table (PENDING → ANCHORED/FAILED; `DELETE` revoked for the app role), not in the audit log: an audit row per anchor would always leave a newer, unanchored head. A manual anchor by an admin *is* audited (`AUDIT_HEAD_ANCHOR_REQUESTED`) before it runs, so the head it anchors includes the request.
@@ -209,7 +209,7 @@ To add one: copy the template at the bottom, take the next number, never renumbe
 
 ## ADR-031 — Certificate QR and hashing without WebCrypto
 **Status:** Accepted (2026-10-19), implemented (Phase 5)
-**Context:** docs/07 Phase 5 first said the QR opens `/verify?proof=<MinIO URL>`; ADR-022 had already chosen the chain-only `/verify?v=&c=&tx=`. Testing that link as a phone opens it (`PUBLIC_BASE_URL=http://<LAN IP>:3000`) showed browsers expose `crypto.subtle` only on HTTPS and localhost, so dropping the pages failed with "Cannot read properties of undefined (reading 'digest')".
+**Context:** docs/digivault-archive/07 Phase 5 first said the QR opens `/verify?proof=<MinIO URL>`; ADR-022 had already chosen the chain-only `/verify?v=&c=&tx=`. Testing that link as a phone opens it (`PUBLIC_BASE_URL=http://<LAN IP>:3000`) showed browsers expose `crypto.subtle` only on HTTPS and localhost, so dropping the pages failed with "Cannot read properties of undefined (reading 'digest')".
 **Decision:**
 - The QR encodes ADR-022's link (`public_verify_url`), and is drawn only once a version has an `ANCHORED` attempt. The PDF reads the block number and time from the anchor tx on whichever trusted contract holds it, and falls back to the recorded time, saying so, if the chain can't be read.
 - `crypto-core/src/hash.ts: sha256` uses WebCrypto when present and js-sha256 (already the inner-node hash) otherwise. Same function, identical digests (`test/hash.test.ts`); rule 2 is unaffected.
@@ -218,7 +218,7 @@ To add one: copy the template at the bottom, take the next number, never renumbe
 
 ## ADR-032 — BNSS s.193(2) deadline: due date, counting, scope
 **Status:** Accepted (2026-10-19), implemented (Phase 7)
-**Context:** docs/07 Phase 7 says "alerts at day 45, 55 and 60". The statute says the investigation must be completed "within two months" of the information being recorded, and two calendar months is 59 to 62 days.
+**Context:** docs/digivault-archive/07 Phase 7 says "alerts at day 45, 55 and 60". The statute says the investigation must be completed "within two months" of the information being recorded, and two calendar months is 59 to 62 days.
 **Decision:**
 - Due date = the **earlier** of registration + 60 days and registration + 2 calendar months (clamped to month end: 31 Dec → 28/29 Feb). The badge never shows "on time" for a day the statute already counts as late; on a 62-day span it warns two days early, which is the safe side.
 - Calendar days in India time; the registration day is not counted (General Clauses Act s.9). Amber from day 45, red from day 55, "overdue" from the due date itself (label "Due today"), then "Overdue by N days".
@@ -230,20 +230,20 @@ To add one: copy the template at the bottom, take the next number, never renumbe
 
 ## ADR-033 — Redaction recall: how it is measured, and the engine fixes it led to
 **Status:** Accepted (2026-10-22), implemented (Phase 6); the case gazetteer, left open here, is ADR-034
-**Context:** docs/07 Phase 6 asks for real recall numbers per entity type and language. Nothing measured the AI service before; the first run left at least one identifier visible in 80–100% of documents.
+**Context:** docs/digivault-archive/07 Phase 6 asks for real recall numbers per entity type and language. Nothing measured the AI service before; the first run left at least one identifier visible in 80–100% of documents.
 **Decision:**
 - Test set generated, not collected: synthetic FIRs in English, Hindi and Kannada, clean and scan-degraded, with gold labels from each word's actual ink. A tuning set (seed 2026, sans) and a held-out set (seed 77, serif, not looked at until the changes were final). Real FIRs can't be used (BNS s.72), and synthetic ones give exact labels.
 - An identifier counts as caught only when **every** tile its ink touches is flagged: a half-masked name still leaks. Precision leaves out dates, FIR numbers, station names and ages.
 - The scan simulation passes pages through JPEG, then saves PNG. JPEG only imitates the scanner or phone that produced the upload; the evidence path stays PNG (rule 1).
 - Engine fixes, each found by the measurement: tile mapping uses the hashing code's `ceil(page / grid)` split; OCR input is background-flattened (page ÷ blurred page; no pixel moves, so tiles still line up); one mobile pattern for `9876543210`, `98765 43210` and `+91 …`; label patterns for "Name of …", "…'s name", "का नाम", genitive Kannada labels; U+200C allowed inside Kannada and Hindi names; a captured name (two words, or one of 4+ letters) is flagged wherever else it appears on the page.
 - Aadhaar matches are scored by Verhoeff checksum: valid 0.98, invalid 0.60 — kept, not dropped, since OCR may have misread one digit (fail-closed).
-- No confidence cutoff for pre-selection: anything at 0.8 or above loses ~10 points of recall in Hindi and Kannada (docs/08).
+- No confidence cutoff for pre-selection: anything at 0.8 or above loses ~10 points of recall in Hindi and Kannada (docs/digivault-archive/08).
 **Open — case gazetteer (FR-33):** flagging names confirmed in one document across the case's other documents needs the names stored somewhere. Options: plaintext in Postgres (simple, but a database of victim names is exactly what BNS s.72 protects); a keyed hash per name token (HMAC with a server key, matched against hashed OCR tokens; no plaintext stored, key must be protected like the salt key); or keep it per upload only (no storage, the officer re-confirms in each document). Needs a human decision.
-**Consequences:** Rule 2 is unaffected: everything here only changes suggestions. Numbers are from typed synthetic pages and will be lower on handwriting and real scans (docs/08 §Limits). The test set shares label vocabulary between tuning and held-out sets.
+**Consequences:** Rule 2 is unaffected: everything here only changes suggestions. Numbers are from typed synthetic pages and will be lower on handwriting and real scans (docs/digivault-archive/08 §Limits). The test set shares label vocabulary between tuning and held-out sets.
 
 ## ADR-034 — Case gazetteer: keyed hashes, per-case keys, cross-script normalisation
 **Status:** Accepted (2026-10-22), implemented (Phase 6). Resolves ADR-033 "Open".
-**Context:** docs/07 Phase 6: a name an officer confirms in one document of a case should be flagged in the case's other documents. That needs names remembered across uploads, and a table of victim names is what BNS s.72 protects.
+**Context:** docs/digivault-archive/07 Phase 6: a name an officer confirms in one document of a case should be flagged in the case's other documents. That needs names remembered across uploads, and a table of victim names is what BNS s.72 protects.
 **Decision (developer's choice of the options in ADR-033):**
 - Store only HMAC-SHA256(case key, "digivault/gazetteer/v1/name|" + normalised name) in `CaseGazetteerEntry` (insert-only for the app role). Case key = HMAC-SHA256(`GAZETTEER_KEY`, "digivault/gazetteer/v1/case|" + caseId): the same name hashes differently in every case, so entries can't be linked across cases. `GAZETTEER_KEY` is its own 32-byte key, not the salt key; `GAZETTEER_KEY_ID` tags each entry so a key change starts afresh instead of mismatching.
 - The AI service already reads every page, so it does the normalising and hashing. Upload sends it the case key and the case's hashes; it returns `name_hashes` on name tiles and flags one- and two-word runs whose hash is known (`source: "gazetteer"`). No name text crosses the web/AI boundary; neither side stores a name.
@@ -251,7 +251,7 @@ To add one: copy the template at the bottom, take the next number, never renumbe
 - Normalisation: lowercase; ZWJ/ZWNJ, punctuation and digits removed; Kannada mapped onto Devanagari by code point; Devanagari romanised (Hindi drops the final inherent vowel, Kannada keeps it); then one set of Latin spelling rules for every script (vowel length, aspirates, doubled letters, -ey, Rao/राव, final anusvara as m, every a/e between two consonants dropped). Key = first two words, or one word of 4+ letters.
 - Word boxes are padded by 15% of their height before mapping to tiles (all suggestions, not only the gazetteer): Tesseract's box stops short of stacked Kannada signs, and a sliver of a name in an unmasked tile leaks.
 - Key unset or invalid: the gazetteer is off; upload and confirm work as before (rule 2).
-**Consequences:** Measured in docs/08: unlabelled names in a follow-up document 25–88% → 100% (tuning set), 28–92% → 98–100% (held-out); checked end to end in the app (`scripts/e2e-redaction-boxes.mjs`). Cross-script key agreement is a heuristic: 17/20 on held-out names (Nair, Begum, Krishna differ between Latin and Indic spellings); same-script matches are exact. Padding costs about 10 points of tile precision. Anyone with `GAZETTEER_KEY` and a case id can test a guessed name against that case's entries: protect the key like the salt key. Losing it loses the gazetteers, not any evidence.
+**Consequences:** Measured in docs/digivault-archive/08: unlabelled names in a follow-up document 25–88% → 100% (tuning set), 28–92% → 98–100% (held-out); checked end to end in the app (`scripts/e2e-redaction-boxes.mjs`). Cross-script key agreement is a heuristic: 17/20 on held-out names (Nair, Begum, Krishna differ between Latin and Indic spellings); same-script matches are exact. Padding costs about 10 points of tile precision. Anyone with `GAZETTEER_KEY` and a case id can test a guessed name against that case's entries: protect the key like the salt key. Losing it loses the gazetteers, not any evidence.
 
 ## ADR-035 — Redaction precision: what NER may read, address context, and a quality gate
 **Status:** Accepted (2026-10-22), implemented (Phase 6, branch `v2/phase-6-precision`)
@@ -262,7 +262,7 @@ To add one: copy the template at the bottom, take the next number, never renumbe
 - Value-only captures for age and case-number patterns, so printed labels aren't boxed.
 - Recall regressions the gate found when NER stopped reading Indic text were fixed at their cause, not by restoring the noise: box widening rightwards by up to 0.8 × the text height (never into the next word); phone digits split at random by OCR; a labelled Hindi address runs to the end of the line; label patterns also run on words regrouped into visual rows (OCR read label and value columns separately); Kannada "-ರಾದ" role forms; vowel-sign fragments dropped from propagated names.
 - The gate (`eval/gate.py`, `pnpm eval:gate`): per set, language and form, recall, partial recall and gazetteer recall must not drop; precision may drop ≤ 2 points. Baseline in `eval/baseline.json`, updated only for deliberate improvements (`--update`). CI: `.github/workflows/redaction-quality.yml` in `ubuntu:26.04` (Tesseract 5.5.0, as measured) with `requirements-eval.lock`.
-**Consequences:** Precision 51–74% → 67–88%; title/footer tiles boxed 13–25% → 0–3%; recall unchanged or higher everywhere, partial recall 100%. Hindi and Kannada names now rely on label patterns, propagation and the gazetteer only: an unlabelled name in the first document of a case is no longer caught by chance (Hindi follow-ups without gazetteer 30–40% → 0–2%; with it, 100%). The held-out set was looked at to diagnose two regressions (docs/08). CI numbers may differ slightly from this machine's until the workflow's first run is checked.
+**Consequences:** Precision 51–74% → 67–88%; title/footer tiles boxed 13–25% → 0–3%; recall unchanged or higher everywhere, partial recall 100%. Hindi and Kannada names now rely on label patterns, propagation and the gazetteer only: an unlabelled name in the first document of a case is no longer caught by chance (Hindi follow-ups without gazetteer 30–40% → 0–2%; with it, 100%). The held-out set was looked at to diagnose two regressions (docs/digivault-archive/08). CI numbers may differ slightly from this machine's until the workflow's first run is checked.
 
 ---
 

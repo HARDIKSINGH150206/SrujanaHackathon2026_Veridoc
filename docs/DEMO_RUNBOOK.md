@@ -16,7 +16,7 @@ Demo data is synthetic: `samples/veridoc/` (a supply-order chat, a freelance cha
 
 ## 2. One-command start
 
-One-time setup first (`docs/DEVELOPMENT.md` sections 1 and 3): `pnpm install`, the `.env` files, `prisma migrate deploy`, the `digivault_app` password, the AI service virtual environment, and the demo seed.
+One-time setup first (`docs/digivault-archive/DEVELOPMENT.md` sections 1 and 3): `pnpm install`, the `.env` files, `prisma migrate deploy`, the `digivault_app` password, the AI service virtual environment, and the demo seed.
 
 Then, from the repository root:
 
@@ -28,7 +28,7 @@ This starts PostgreSQL and MinIO, the AI service on :8001 and the web app on :30
 
 The AI service's startup check for `MODEL_MODE=fake` has not been run end to end on this branch (the service could not be started where it was written). Try it once before the day. A single wrapper script for this command is a later item.
 
-Anchoring needs `AMOY_RPC_URL` in `apps/web/.env.local` and a funded anchoring key (`docs/DEVELOPMENT.md` section 6, `docs/05-demo-golden-path.md` for gas figures).
+Anchoring needs `AMOY_RPC_URL` in `apps/web/.env.local` and a funded anchoring key (`docs/digivault-archive/DEVELOPMENT.md` section 6, `docs/digivault-archive/05-demo-golden-path.md` for gas figures).
 
 ## 3. Before the demo (T minus 30 minutes)
 
@@ -36,15 +36,15 @@ Anchoring needs `AMOY_RPC_URL` in `apps/web/.env.local` and a funded anchoring k
 |---|---|
 | 1 | Start with the command in section 2. Badge visible. |
 | 2 | Demo accounts exist (`cd apps/web && node --experimental-strip-types prisma/seed-demo.ts`). The roles show as party and reviewer after `TRIM_PLAN.md` step 1. |
-| 3 | Wallet has Amoy test POL (about 0.003 per document anchor; `docs/05`). |
+| 3 | Wallet has Amoy test POL (about 0.003 per document anchor; `docs/digivault-archive/05`). |
 | 4 | **Pre-anchor one record** (section 4, steps 8 to 10) so a verified receipt is ready before going on stage. |
-| 5 | Save the receipt files for that record in a known folder, and a copy of one page with a single pixel changed for the tamper test (the command is in `docs/05-demo-golden-path.md`, section 3). |
+| 5 | Save the receipt files for that record in a known folder, and a copy of one page with a single pixel changed for the tamper test (the command is in `docs/digivault-archive/05-demo-golden-path.md`, section 3). |
 | 6 | Open three tabs: the dashboard (party), a private window on `/verify`, and the explorer page for the anchor. |
 | 7 | Record the screen of the whole flow once, with the network on. |
 
 ## 4. The demo script
 
-Roughly 6 minutes. Accounts are the seeded demo accounts (`docs/05-demo-golden-path.md`, section 1). Until `TRIM_PLAN.md` step 1 is done, the screens still say "case" where this script says "agreement".
+Roughly 6 minutes. Accounts are the seeded demo accounts (`docs/digivault-archive/05-demo-golden-path.md`, section 1). Until `TRIM_PLAN.md` step 1 is done, the screens still say "case" where this script says "agreement".
 
 | # | Status | Click or do | The audience sees | Say |
 |---|---|---|---|---|

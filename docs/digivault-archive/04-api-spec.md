@@ -347,7 +347,7 @@ The `/shares/{token}` page has a "Download verification files" button that fetch
 
 ## 7a. Cases and the BNSS s.193(2) deadline
 
-Case management is outside the evidence lifecycle above, but the deadline fields are part of the contract (docs/07 Phase 7, ADR-032).
+Case management is outside the evidence lifecycle above, but the deadline fields are part of the contract (docs/digivault-archive/07 Phase 7, ADR-032).
 
 | Route | Roles | Notes |
 |---|---|---|
@@ -389,7 +389,7 @@ Every write goes through `writeAuditLog` (`apps/web/src/lib/audit.ts`), which ne
 
 Share recipients have no account, but `actorId` is a required FK to `User`. So share-link rows are attributed to the officer who created the share, with `accessedBy: "share_recipient"`. `DOWNLOAD_PAGE` is defined but not currently written.
 
-**Anchoring (docs/07 Phase 4, ADR-030).** The head `(seq, entryHash)` is anchored on `EvidenceAnchorV2` with every document anchor and on its own every `AUDIT_ANCHOR_INTERVAL_HOURS` (default 6; skipped when nothing is new; `AuditHeadAnchor` rows; copy at `audit-heads/seq-<n>.json` in the Object-Locked anchor bucket). Standalone anchors are not audited, so a quiet log stays fully anchored.
+**Anchoring (docs/digivault-archive/07 Phase 4, ADR-030).** The head `(seq, entryHash)` is anchored on `EvidenceAnchorV2` with every document anchor and on its own every `AUDIT_ANCHOR_INTERVAL_HOURS` (default 6; skipped when nothing is new; `AuditHeadAnchor` rows; copy at `audit-heads/seq-<n>.json` in the Object-Locked anchor bucket). Standalone anchors are not audited, so a quiet log stays fully anchored.
 
 - `GET /api/v1/admin/audit` (`ADMIN`) — verifies the whole chain and compares it with the anchored heads: `{ chain: { ok, checked, head_seq, head_hash } | { ok: false, checked, bad_seq, reason }, anchored: { seq, head, anchored_at, tx_hash, block_number } | null, anchored_matches, unanchored_entries, rewritten_range: { from, to } | null, chain_read_error, interval_hours, recent_attempts }`. Shown at `/dashboard/audit`.
 - `POST /api/v1/admin/audit/anchor` (`ADMIN`, **requires `X-StepUp-Token`**) — anchors the head now. `200 { status: "ANCHORED", seq, entry_hash, tx_hash, block_number, object_lock_uri }` or `200 { status: "SKIPPED", reason }`; `502 { status: "FAILED", reason }`, including when the chain doesn't verify or the database disagrees with the anchored head (nothing is sent).
@@ -403,5 +403,5 @@ Share recipients have no account, but `actorId` is a required FK to `User`. So s
 - ~~`chain_hash` formula~~ — resolved: `chain_hash = SHA256(previous_hash + merkle_root + version_no + timestamp)`, per project decision (see endpoint 3).
 - ~~The anchor flow's async/poll shape~~ — resolved: anchoring is automatic and runs in the background after upload/confirm; the UI polls (endpoint 4). A job queue would be needed for serverless or multi-instance deployments.
 - Step-up via the PIN fallback is always accepted, so step-up is only as strong as the PIN — open decision whether to restrict it to users with no registered authenticator.
-- ~~Anchor tx lands but the server never sees the receipt~~ — resolved (docs/07 P0.8, ADR-025): the tx hash is recorded when sent, and every anchor attempt checks `getAnchor()` first; a matching on-chain root with a successful recorded tx is marked `ANCHORED` without a new send.
+- ~~Anchor tx lands but the server never sees the receipt~~ — resolved (docs/digivault-archive/07 P0.8, ADR-025): the tx hash is recorded when sent, and every anchor attempt checks `getAnchor()` first; a matching on-chain root with a successful recorded tx is marked `ANCHORED` without a new send.
 - Redaction confirm (endpoint 3) requires the server to redraw PNG pages with masked regions — Node has no DOM `<canvas>`, so the backend will need a headless canvas library (e.g. `@napi-rs/canvas` or `sharp`) as a new dependency. Not a spec problem, but a step-4 backend decision this doc's contract assumes is solvable.

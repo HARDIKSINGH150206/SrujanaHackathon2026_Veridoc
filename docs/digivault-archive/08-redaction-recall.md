@@ -1,6 +1,6 @@
 # 08 — Redaction Recall Measurement
 
-How often the AI suggestions cover every victim identifier on a page, and how many suggestions are wasted, measured on **synthetic typed FIRs** (docs/07 Phase 6). Real numbers from `pnpm eval:redaction`, run 2026-10-22. Decisions: ADR-033 (engine), ADR-034 (case gazetteer), ADR-035 (precision and the gate).
+How often the AI suggestions cover every victim identifier on a page, and how many suggestions are wasted, measured on **synthetic typed FIRs** (docs/digivault-archive/07 Phase 6). Real numbers from `pnpm eval:redaction`, run 2026-10-22. Decisions: ADR-033 (engine), ADR-034 (case gazetteer), ADR-035 (precision and the gate).
 
 **Why recall first:** a missed identifier in a shared copy can be a BNS s.72 violation; an extra masked tile only costs readability. Suggestions are never final either way: an officer reviews every page (rule 2). Precision still matters: a reviewer wading through boxes on the form's own title and labels is a reviewer more likely to miss the real one.
 
@@ -172,7 +172,7 @@ Held-out misses: Nair / नायर, Begum / बेगम, Krishna / कृष�
 - **The gazetteer only knows confirmed names.** The first document in a case gets no help from it.
 - **Hindi and Kannada names depend on label patterns, propagation and the gazetteer only**; no NER model reads those scripts now. A bare name in a first document, with no label anywhere, is not found.
 - 10 documents per language per set: one more or less caught identifier moves a per-type cell by up to 10 points.
-- Tamil and Telugu are not measured; there is no OCR or pattern support for them yet (docs/07).
+- Tamil and Telugu are not measured; there is no OCR or pattern support for them yet (docs/digivault-archive/07).
 
 ## Not done yet
 

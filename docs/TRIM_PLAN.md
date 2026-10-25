@@ -47,7 +47,7 @@ Files with the most old wording (counts from the scan): `prisma/seed-demo.ts`, `
 | BSA s.63 certificate wording (`certificate-text.ts`, the certificate route's text) | Replaced by a receipt using the same PDF and QR builder with VeriDoc wording. Needs its own test update |
 | FIR-style eval fixtures and gold files | Replaced by synthetic redaction fixtures. The quality gate baseline must be regenerated deliberately (`eval:gate --update`) |
 | Old demo documents and `public/sample-firs/` | Replaced by the synthetic samples |
-| NCRB, police and court framing in README, `CLAUDE.md`, `AGENTS.md`, the kickoff prompt, `docs/PRD.md`, `docs/ARCHITECTURE.md` | Done in the docs pass. `docs/01` to `docs/08` keep their DigiVault text as history; see section 6 |
+| NCRB, police and court framing in README, `CLAUDE.md`, `AGENTS.md`, the kickoff prompt, `docs/PRD.md`, `docs/ARCHITECTURE.md` | Done in the docs pass. `docs/01`, `04` to `08` and `DEVELOPMENT.md` now live in `docs/digivault-archive/` and keep their DigiVault text as history; see section 6 |
 
 ## 4. Add
 
@@ -77,6 +77,6 @@ Already added: settings, model adapter interface and fake adapter, model manifes
 
 If a later change would alter a hash, an audit format or a migration, stop and decide it explicitly in a new ADR first.
 
-## 6. Documents that stay as DigiVault history
+## 6. Documents kept as DigiVault history
 
-`docs/01-problem-and-novelty.md`, `docs/04-api-spec.md`, `docs/05-demo-golden-path.md`, `docs/06-frontend-agent-plan.md`, `docs/07-v2-build-plan.md`, `docs/08-redaction-recall.md` and `docs/DEVELOPMENT.md` still carry the NCRB, police, court and victim framing. They describe the inherited vault and redaction engine accurately; only the framing is old. `docs/02` and `docs/03` are the integrity references and apply as they are. Rewriting the framing in those files is a later step.
+`docs/digivault-archive/` holds the pre-event DigiVault documents: `01-problem-and-novelty.md`, `04-api-spec.md`, `05-demo-golden-path.md`, `06-frontend-agent-plan.md`, `07-v2-build-plan.md`, `08-redaction-recall.md` and `DEVELOPMENT.md`. They still carry the NCRB, police, court and victim framing. They describe the inherited vault and redaction engine accurately; only the framing is old. `docs/02` and `docs/03` stay in `docs/` as the integrity references and apply as they are. Rewriting the framing in the archived files is a later step.
