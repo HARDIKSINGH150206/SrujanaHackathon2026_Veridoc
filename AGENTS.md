@@ -26,7 +26,9 @@ Where a task and these rules disagree, stop and ask the developer.
 
 ## Git and GitHub — read this carefully
 
-**You do not have permission to push to GitHub, create branches on a remote, open pull requests, or run any `gh` CLI command, under any circumstance.** All GitHub actions (push, pull requests, remote settings) are performed by the human developer only. This is enforced at the permissions level (see `.claude/settings.json`) — if a denied command is blocked, do not attempt a workaround (no `curl` to the GitHub API, no alternate git remote, nothing). Local git operations (`git init`, `git add`, `git commit`, `git status`, `git log`, `git diff`, local branches) inside the working directory are fine. Never use `--no-verify`. The base branch is `dev`.
+**You do not have permission to push to GitHub, create branches on a remote, open pull requests, or run any `gh` CLI command, under any circumstance.** All GitHub actions (push, pull requests, remote settings) are performed by the human developer only. This is enforced at the permissions level (see `.claude/settings.json`) — if a denied command is blocked, do not attempt a workaround (no `curl` to the GitHub API, no alternate git remote, nothing). Local git operations (`git init`, `git add`, `git commit`, `git status`, `git log`, `git diff`, local branches) inside the working directory are fine. Never use `--no-verify`.
+
+**Branch model: `main` only.** There is no `dev` branch. Create each task branch from `main` (for example `feat/<name>` or `docs/<name>`), commit locally, and stop. The developer merges into `main` and pushes. Do not merge into `main` yourself.
 
 ## After every work session
 

@@ -136,7 +136,7 @@ The smoke and e2e scripts need the web app running (and the AI service for parts
 
 ## 8. Git workflow
 
-- Base branch: `dev`. Feature branches: `feature/<name>`; v2 phases: `v2/phase-<n>-<name>`.
+- Branch model: `main` only. Create each task branch from `main` (`feat/<name>`, `docs/<name>`); the developer merges into `main`.
 - Claude Code may commit locally only. **Pushing, remote branches, PRs and `gh` are done by the developer** (enforced in `.claude/settings.json`).
 - Commit messages: `type(scope): summary` (e.g. `feat(web): …`, `fix(crypto-core): …`).
 - Every Claude session ends with the audit report described in `CLAUDE.md`.
