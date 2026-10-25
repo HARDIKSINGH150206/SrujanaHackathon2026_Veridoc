@@ -1,4 +1,5 @@
 import type { Viewport } from "next";
+import { DemoBadge } from "./_components/demo-badge";
 import { AuthProvider } from "@/lib/client/auth-context";
 import { THEME_CSS } from "@/lib/client/theme";
 
@@ -14,12 +15,16 @@ export const viewport: Viewport = {
   themeColor: "#0a0a0a",
 };
 
+// The demo badge reads MODEL_MODE per request, not at build time.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
         <style>{THEME_CSS}</style>
         <AuthProvider>{children}</AuthProvider>
+        <DemoBadge />
       </body>
     </html>
   );
