@@ -21,14 +21,14 @@ One-time setup first (`docs/digivault-archive/DEVELOPMENT.md` sections 1 and 3):
 Then, from the repository root:
 
 ```bash
-docker compose up -d && (cd apps/ai-service && MODEL_MODE=fake .venv/bin/uvicorn app.main:app --port 8001 &) && MODEL_MODE=fake pnpm --filter @digivault/web dev
+docker compose up -d --wait && (cd apps/ai-service && MODEL_MODE=fake .venv/bin/uvicorn app.main:app --port 8001 &) && MODEL_MODE=fake pnpm --filter @digivault/web dev
 ```
 
 This starts PostgreSQL and MinIO, the AI service on :8001 and the web app on :3000, all in fake-model mode. Open `http://localhost:3000`. The yellow "Demo mode: recorded model output" badge must be visible at the bottom of every page. If it is not, stop: `MODEL_MODE` is not `fake`.
 
 The AI service's startup (`MODEL_MODE=fake`) and the Chat terms screen were run end to end on 2026-10-26: AI service and web app up, the supply-order sample analysed, no browser console errors, and no horizontal overflow at 390 px or 1440 px wide.
 
-If `docker compose up -d` stops with "container name already in use", containers named `digivault-postgres` and `digivault-minio` from another checkout are already running. Because the command is chained with `&&`, nothing after it starts. Use those containers as they are and run the other two parts of the command by hand, or stop the old containers first.
+The stack has its own identity so it never collides with the old DigiVault containers: project name `veridoc`, containers `veridoc-postgres` and `veridoc-minio`, volumes `veridoc_postgres_data` and `veridoc_minio_data`, and host ports Postgres `5440`, MinIO `9100` and its console `9101` (the old ones use `5434`, `9000` and `9001`). Ports and credentials come from `.env` (copy `.env.example`). Run `scripts/check-compose-isolation.sh --live` to check it: it starts the stack beside any running `digivault-*` containers and fails if they were touched. Point `apps/web/.env.local` at these ports (`apps/web/.env.example` already does). If a default port is taken on your machine, change it in `.env`.
 
 A single wrapper script for this command is a later item.
 

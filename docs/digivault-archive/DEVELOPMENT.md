@@ -29,7 +29,7 @@ docs/                 specs, PRD, architecture, decisions, plans
 ## 3. First-time setup
 
 ```bash
-docker compose up -d                 # Postgres :5434, MinIO :9000 (console :9001)
+docker compose up -d                 # VeriDoc stack: Postgres :5440, MinIO :9100 (console :9101); see docker-compose.yml
 pnpm install
 
 cp .env.example .env                                  # owner/migration DB URL
@@ -44,7 +44,7 @@ Fill in:
 Database:
 ```bash
 pnpm exec prisma migrate deploy
-docker exec digivault-postgres psql -U digivault -d digivault \
+docker exec veridoc-postgres psql -U veridoc -d veridoc \
   -c "ALTER ROLE digivault_app PASSWORD '<password from apps/web/.env.local>'"
 node prisma/seed-for-testing.mjs     # one user per role + a test case (idempotent)
 ```

@@ -2,10 +2,10 @@ import { Client, type ObjectLockInfo } from "minio";
 
 const minioClient = new Client({
   endPoint: process.env.MINIO_ENDPOINT ?? "localhost",
-  port: Number(process.env.MINIO_PORT ?? 9000),
+  port: Number(process.env.MINIO_PORT ?? 9100),
   useSSL: false,
-  accessKey: process.env.MINIO_ACCESS_KEY ?? "digivault",
-  secretKey: process.env.MINIO_SECRET_KEY ?? "digivault123",
+  accessKey: process.env.MINIO_ACCESS_KEY ?? "veridoc",
+  secretKey: process.env.MINIO_SECRET_KEY ?? "veridoc123",
 });
 
 const BUCKET = process.env.MINIO_BUCKET ?? "digivault-evidence";
@@ -145,7 +145,7 @@ async function ensurePublicProofBucket(): Promise<void> {
 
 export function publicProofUrl(documentVersionId: string): string {
   const base =
-    process.env.MINIO_PUBLIC_URL ?? `http://${process.env.MINIO_ENDPOINT ?? "localhost"}:${process.env.MINIO_PORT ?? 9000}`;
+    process.env.MINIO_PUBLIC_URL ?? `http://${process.env.MINIO_ENDPOINT ?? "localhost"}:${process.env.MINIO_PORT ?? 9100}`;
   return `${base.replace(/\/+$/, "")}/${PUBLIC_PROOF_BUCKET}/proofs/${encodeURIComponent(documentVersionId)}.json`;
 }
 

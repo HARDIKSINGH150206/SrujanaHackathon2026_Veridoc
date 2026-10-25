@@ -80,9 +80,9 @@ docker-compose.yml   PostgreSQL and MinIO for local development
 ### One-time setup
 
 ```bash
-docker compose up -d                 # PostgreSQL on :5434, MinIO on :9000
 pnpm install
-cp .env.example .env
+cp .env.example .env                  # names the local stack: project veridoc, Postgres :5440, MinIO :9100
+docker compose up -d --wait          # its own containers, ports and volumes; the old DigiVault ones can keep running
 cp apps/web/.env.example apps/web/.env.local
 cp packages/contracts/.env.example packages/contracts/.env
 ```
@@ -91,7 +91,7 @@ Fill in `apps/web/.env.local` (`DATABASE_URL` for the `digivault_app` role, `AUT
 
 ```bash
 pnpm exec prisma migrate deploy
-docker exec digivault-postgres psql -U digivault -d digivault \
+docker exec veridoc-postgres psql -U veridoc -d veridoc \
   -c "ALTER ROLE digivault_app PASSWORD '<password from apps/web/.env.local>'"
 cd apps/ai-service && python3 -m venv .venv \
   && .venv/bin/pip install -r requirements.txt \
