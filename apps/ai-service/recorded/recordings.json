@@ -3,125 +3,168 @@
     {
       "playbook_id": "supply-order",
       "chat_sha256": "87de4cbb1d0950d63c671bffd5b02b8b278d656ae349711df9793cd3ddcbcaaf",
-      "terms": [
-        {
-          "kind": "quantity",
-          "label": "Notebooks ordered",
-          "value": "200",
-          "source_lines": [
-            1,
-            2
-          ]
-        },
-        {
-          "kind": "unit_price",
-          "label": "Price per notebook (INR)",
-          "value": "54",
-          "source_lines": [
-            2,
-            4
-          ]
-        },
-        {
-          "kind": "total_price",
-          "label": "Order total (INR)",
-          "value": "9000",
-          "source_lines": [
-            2
-          ]
-        },
-        {
-          "kind": "advance",
-          "label": "Advance paid (INR)",
-          "value": "3000",
-          "source_lines": [
-            6,
-            7
-          ]
-        },
-        {
-          "kind": "balance",
-          "label": "Balance due on delivery (INR)",
-          "value": "6000",
-          "source_lines": [
-            6
-          ]
-        },
-        {
-          "kind": "deadline",
-          "label": "Delivery date",
-          "value": "2026-03-20",
-          "source_lines": [
-            4,
-            8
-          ]
-        },
-        {
-          "kind": "inclusion",
-          "label": "School logo on cover, no extra charge",
-          "value": "included",
-          "source_lines": [
-            9,
-            10
-          ]
+      "output": {
+        "terms": {
+          "quantity": {
+            "status": "stated",
+            "value": "200",
+            "quote": [
+              "200 notebooks"
+            ],
+            "msg": [
+              1
+            ],
+            "reason": "One number, stated by the buyer and repeated by the seller."
+          },
+          "unit_price": {
+            "status": "stated",
+            "value": "54",
+            "quote": [
+              "₹45 per piece"
+            ],
+            "msg": [
+              2
+            ],
+            "reason": "The seller states one price per piece."
+          },
+          "total_price": {
+            "status": "stated",
+            "value": "9000",
+            "quote": [
+              "₹9000"
+            ],
+            "msg": [
+              2
+            ],
+            "reason": "The seller states the total once."
+          },
+          "advance": {
+            "status": "stated",
+            "value": "3000",
+            "quote": [
+              "₹3000 advance"
+            ],
+            "msg": [
+              6
+            ],
+            "reason": "The seller states the advance and the buyer says it was paid."
+          },
+          "balance": {
+            "status": "stated",
+            "value": "6000",
+            "quote": [
+              "baaki ₹6000"
+            ],
+            "msg": [
+              6
+            ],
+            "reason": "The seller states the balance due on delivery."
+          },
+          "deadline": {
+            "status": "stated",
+            "value": "2026-03-20",
+            "quote": [
+              "20 March"
+            ],
+            "msg": [
+              4
+            ],
+            "reason": "The seller gives a delivery date."
+          },
+          "inclusion": {
+            "status": "stated",
+            "value": "included",
+            "quote": [
+              "Logo free hai"
+            ],
+            "msg": [
+              10
+            ],
+            "reason": "The seller says the logo costs nothing extra."
+          }
         }
-      ]
+      }
     },
     {
       "playbook_id": "freelance-job",
       "chat_sha256": "847ea1992d795578f62d352e20737abf630856c60547b00faded24d1e6d84ae1",
-      "terms": [
-        {
-          "kind": "deliverable",
-          "label": "Logo and 3 Instagram post designs",
-          "value": "logo + 3 posts",
-          "source_lines": [
-            1
-          ]
-        },
-        {
-          "kind": "total_price",
-          "label": "Package price (INR)",
-          "value": "6000",
-          "source_lines": [
-            2
-          ]
-        },
-        {
-          "kind": "revision_limit",
-          "label": "Revisions included",
-          "value": "2",
-          "source_lines": [
-            2
-          ]
-        },
-        {
-          "kind": "extra_charge",
-          "label": "Third revision (INR)",
-          "value": "500",
-          "source_lines": [
-            7
-          ]
-        },
-        {
-          "kind": "deadline",
-          "label": "Final files due",
-          "value": "2026-04-10",
-          "source_lines": [
-            3,
-            4
-          ]
-        },
-        {
-          "kind": "balance",
-          "label": "Balance due after delivery (INR)",
-          "value": "4000",
-          "source_lines": [
-            6,
-            7
-          ]
+      "output": {
+        "terms": {
+          "deliverable": {
+            "status": "stated",
+            "value": "logo + 3 posts",
+            "quote": [
+              "logo plus 3 Instagram post designs"
+            ],
+            "msg": [
+              1
+            ],
+            "reason": "The client lists what she wants."
+          },
+          "total_price": {
+            "status": "stated",
+            "value": "6000",
+            "quote": [
+              "₹6000"
+            ],
+            "msg": [
+              2
+            ],
+            "reason": "The seller states the total once."
+          },
+          "revision_limit": {
+            "status": "stated",
+            "value": "2",
+            "quote": [
+              "2 revisions included"
+            ],
+            "msg": [
+              2
+            ],
+            "reason": "The designer includes two revisions."
+          },
+          "extra_charge": {
+            "status": "stated",
+            "value": "500",
+            "quote": [
+              "₹500 extra"
+            ],
+            "msg": [
+              7
+            ],
+            "reason": "The designer names a price for a third revision."
+          },
+          "deadline": {
+            "status": "stated",
+            "value": "2026-04-10",
+            "quote": [
+              "10 April"
+            ],
+            "msg": [
+              4
+            ],
+            "reason": "The seller gives a delivery date."
+          },
+          "advance": {
+            "status": "missing",
+            "value": null,
+            "quote": [],
+            "msg": [],
+            "reason": "No message states an advance."
+          },
+          "balance": {
+            "status": "stated",
+            "value": "4000",
+            "quote": [
+              "Baaki ₹4000"
+            ],
+            "msg": [
+              6
+            ],
+            "reason": "The seller states the balance due on delivery."
+          }
         }
-      ]
+      }
     }
   ]
 }
