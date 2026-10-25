@@ -1,0 +1,43 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 720 >>
+stream
+BT /F1 16 Tf 56 780 Td (Order Confirmation - SYNTHETIC SAMPLE) Tj ET
+BT /F1 10 Tf 56 754 Td (Made-up data for testing. Not a real order, shop or person.) Tj ET
+BT /F1 12 Tf 56 712 Td (Supplier: Lumo Stationers \(fictional\)) Tj ET
+BT /F1 12 Tf 56 690 Td (Buyer: Dev) Tj ET
+BT /F1 12 Tf 56 668 Td (Date: 12 March 2026) Tj ET
+BT /F1 12 Tf 56 624 Td (Item: A5 ruled notebook, school logo on cover) Tj ET
+BT /F1 12 Tf 56 602 Td (Quantity: 200) Tj ET
+BT /F1 12 Tf 56 580 Td (Price per piece: Rs 45) Tj ET
+BT /F1 12 Tf 56 558 Td (Total: Rs 9000) Tj ET
+BT /F1 12 Tf 56 536 Td (Advance received: Rs 3000) Tj ET
+BT /F1 12 Tf 56 514 Td (Balance on delivery: Rs 6000) Tj ET
+BT /F1 12 Tf 56 492 Td (Delivery by: 20 March 2026) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001012 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1109
+%%EOF

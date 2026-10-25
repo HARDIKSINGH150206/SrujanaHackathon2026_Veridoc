@@ -1,0 +1,12 @@
+{
+  "playbook_id": "supply-order",
+  "terms": [
+    {"kind": "quantity", "label": "Notebooks ordered", "value": "200", "source_lines": [1, 2]},
+    {"kind": "unit_price", "label": "Price per notebook (INR)", "value": "45", "source_lines": [2, 4]},
+    {"kind": "total_price", "label": "Order total (INR)", "value": "9000", "source_lines": [2]},
+    {"kind": "advance", "label": "Advance paid (INR)", "value": "3000", "source_lines": [6, 7]},
+    {"kind": "balance", "label": "Balance due on delivery (INR)", "value": "6000", "source_lines": [6]},
+    {"kind": "deadline", "label": "Delivery date", "value": "2026-03-20", "source_lines": [4, 8]},
+    {"kind": "inclusion", "label": "School logo on cover, no extra charge", "value": "included", "source_lines": [9, 10]}
+  ]
+}
