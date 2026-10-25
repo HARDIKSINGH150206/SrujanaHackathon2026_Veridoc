@@ -1,0 +1,82 @@
+# VeriDoc — Trim Plan
+
+How DigiVault becomes VeriDoc without touching the parts that make it trustworthy. Written from a read-only scan of the import commit (about 235 files). The scan searched for NCRB, police, court, victim, officer, FIR, BNSS, BSA, service number, investigating and similar wording.
+
+Ground rules (ADR-037, ADR-039):
+- Only words on screen change. Database columns, the `Role` enum and the audit action strings do not.
+- No Prisma migration, no change to a hash, a proof format or an audit format.
+- The front end and the redaction screens (tiles, preview, confirm, share link, verify page) stay as they are.
+
+## 1. Keep, unchanged
+
+| Keep | Why |
+|---|---|
+| Hash chain, salted Merkle tree, proof format v2 (`packages/crypto-core`, `docs/03`) | This is the evidence vault (F6) |
+| Anchoring: MinIO Object Lock and Polygon Amoy, `EvidenceAnchorV2.sol` | `CLAUDE.md` rule 3 |
+| Server re-verification of every hash | `CLAUDE.md` rule 4 |
+| Step-up authentication (WebAuthn, PIN fallback), HMAC sessions, rate limits | Protects confirmations and shares |
+| Redaction engine and suggestion tiles, redaction proofs, `eval/` quality gate | Needed to redact names, numbers and addresses before sharing |
+| Link sharing (`DocumentShare`), serving redacted versions only | ADR-009 |
+| Insert-only, hash-chained, anchored audit log | ADR-010, ADR-020, ADR-030 |
+| Verify page (public, stateless) | `CLAUDE.md` rule 5 |
+| Audit action strings such as `CREATE_CASE`, `UPLOAD_DOCUMENT_VERSION`, `CONFIRM_REDACTIONS` | They are hashed into the audit chain |
+
+## 2. Rename (words on screen only)
+
+| Now | Becomes | Where |
+|---|---|---|
+| case, case file | agreement | Dashboard, case view, new-case form, upload view, landing page, share panel |
+| Police Officer, Investigating Officer | party | Role labels in `shell.tsx` and the dashboard |
+| Court Official, Forensic Lab | reviewer | Role labels |
+| Admin | admin (unchanged) | |
+| "Good morning, Officer." | a neutral greeting | `shell.tsx` |
+| Court Verification Portal | Verify page | `apps/web/src/app/verify/page.tsx` text, docs |
+| Service Number | the label stays unless it confuses; the field and API are unchanged | `login/page.tsx` |
+| victim_name and similar entity labels shown in the redaction screen | neutral labels such as "person name" | UI text only; the stored `entityType` values do not change |
+| Demo accounts and demo cases | agreement-style names | `seed-demo.ts`, `prisma/seed-for-testing.mjs` and the scripts that read them |
+
+Role mapping for the screen: `POLICE_OFFICER` and `INVESTIGATING_OFFICER` show as "party" (they can upload, confirm and share); `COURT_OFFICIAL` and `FORENSIC_LAB` show as "reviewer" (read-only). Open question: whether `POLICE_OFFICER` needs a different label from `INVESTIGATING_OFFICER`, which today differ only in sharing and anchoring rights.
+
+Files with the most old wording (counts from the scan): `prisma/seed-demo.ts`, `investigation-dashboard.tsx`, `smoke-test.mjs`, `eval/fixtures.py`, `landing.tsx`, `real_suggestions.py`, `golden-path.mjs`, `case-view.tsx`, `custody-graph.tsx`, `login/page.tsx`.
+
+## 3. Remove
+
+| Remove | Notes |
+|---|---|
+| BNSS s.193(2) deadline feature: `lib/bnss-deadline.ts` and test, `deadline.tsx`, the deadline fields in the case form and API, deadline scripts | The columns `firRegisteredAt` and `offenceSections` stay in the schema, unused. The audit action `UPDATE_CASE_DEADLINE_FIELDS` stays as history |
+| BSA s.63 certificate wording (`certificate-text.ts`, the certificate route's text) | Replaced by a receipt using the same PDF and QR builder with VeriDoc wording. Needs its own test update |
+| FIR-style eval fixtures and gold files | Replaced by synthetic redaction fixtures. The quality gate baseline must be regenerated deliberately (`eval:gate --update`) |
+| Old demo documents and `public/sample-firs/` | Replaced by the synthetic samples |
+| NCRB, police and court framing in README, `CLAUDE.md`, `AGENTS.md`, the kickoff prompt, `docs/PRD.md`, `docs/ARCHITECTURE.md` | Done in the docs pass. `docs/01` to `docs/08` keep their DigiVault text as history; see section 6 |
+
+## 4. Add
+
+| Add | File |
+|---|---|
+| Chat import and parser | `apps/ai-service/app/chat_import.py`; an import screen in the dashboard workspace |
+| Term extractor with grounding | `apps/ai-service/app/term_extractor.py` |
+| Flags (four statuses) and recommendation | `apps/ai-service/app/flags.py`, `suggestion.py` |
+| Recap and echo code | `apps/ai-service/app/recap.py`; a recap screen |
+| Chat record builder | `apps/web`, using `pdf-lib` as `certificate.ts` does |
+| Playbooks and templates | `playbooks/` |
+| Local model adapter | replaces the stub in `apps/ai-service/app/model_adapter.py` |
+
+Already added: settings, model adapter interface and fake adapter, model manifest and startup check, demo badge, synthetic samples.
+
+## 5. Order, risk and what it would force
+
+| # | Step | Risk | Forces a migration or a hash or audit format change? |
+|---|---|---|---|
+| 1 | UI wording and seed data (section 2) | Low. Text only. Scripts and tests that read the old demo names must change together | No |
+| 2 | Chat import and term extraction with grounding | Low. New code outside the hash path | No |
+| 3 | Flags, recommendation, recap, echo code | Medium. Wording and templates need review; the echo code needs vectors | No |
+| 4 | Chat record builder, saving records as versions | Medium. Touches the upload flow, which is on the integrity path; no change to what is hashed | No, if the record is an ordinary PDF (ADR-040) |
+| 5 | Local model behind the adapter | Medium. Needs a pinned model and hardware testing | No |
+| 6 | Remove the BNSS and BSA features (section 3) | Medium. Touches routes and the certificate tests. The unused columns stay | No |
+| 7 | Role and schema rename | **High. Skipped** (ADR-039) | Would need a migration for the `Role` enum. Renaming audit action strings would make new audit rows differ from the strings in old rows and break verification of the old chain |
+
+If a later change would alter a hash, an audit format or a migration, stop and decide it explicitly in a new ADR first.
+
+## 6. Documents that stay as DigiVault history
+
+`docs/01-problem-and-novelty.md`, `docs/04-api-spec.md`, `docs/05-demo-golden-path.md`, `docs/06-frontend-agent-plan.md`, `docs/07-v2-build-plan.md`, `docs/08-redaction-recall.md` and `docs/DEVELOPMENT.md` still carry the NCRB, police, court and victim framing. They describe the inherited vault and redaction engine accurately; only the framing is old. `docs/02` and `docs/03` are the integrity references and apply as they are. Rewriting the framing in those files is a later step.

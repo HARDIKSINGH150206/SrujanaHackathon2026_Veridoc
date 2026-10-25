@@ -1,4 +1,6 @@
-# DigiVault — Decision Log
+# VeriDoc — Decision Log
+
+ADR-001 to ADR-035 are **DigiVault origin**: decisions made for the earlier project before the hackathon (`docs/PRIOR_WORK.md`). They keep their original police and court wording, and the ones on hashing, anchoring, audit and redaction still bind this codebase. VeriDoc decisions start at ADR-036.
 
 Architecture Decision Records, newest last. Each has a status:
 **Accepted** (in force) · **Proposed** (needs a human decision) · **Superseded by ADR-xxx**.
@@ -261,3 +263,36 @@ To add one: copy the template at the bottom, take the next number, never renumbe
 - Recall regressions the gate found when NER stopped reading Indic text were fixed at their cause, not by restoring the noise: box widening rightwards by up to 0.8 × the text height (never into the next word); phone digits split at random by OCR; a labelled Hindi address runs to the end of the line; label patterns also run on words regrouped into visual rows (OCR read label and value columns separately); Kannada "-ರಾದ" role forms; vowel-sign fragments dropped from propagated names.
 - The gate (`eval/gate.py`, `pnpm eval:gate`): per set, language and form, recall, partial recall and gazetteer recall must not drop; precision may drop ≤ 2 points. Baseline in `eval/baseline.json`, updated only for deliberate improvements (`--update`). CI: `.github/workflows/redaction-quality.yml` in `ubuntu:26.04` (Tesseract 5.5.0, as measured) with `requirements-eval.lock`.
 **Consequences:** Precision 51–74% → 67–88%; title/footer tiles boxed 13–25% → 0–3%; recall unchanged or higher everywhere, partial recall 100%. Hindi and Kannada names now rely on label patterns, propagation and the gazetteer only: an unlabelled name in the first document of a case is no longer caught by chance (Hindi follow-ups without gazetteer 30–40% → 0–2%; with it, 100%). The held-out set was looked at to diagnose two regressions (docs/08). CI numbers may differ slightly from this machine's until the workflow's first run is checked.
+
+---
+
+## ADR-036 — Reuse DigiVault as the base of VeriDoc, with organiser approval
+**Status:** Accepted (2026-10-25)
+**Context:** DigiVault is our own project, written before the hackathon. It already has the hard parts VeriDoc needs: a tamper-evident vault, anchoring, a public verify page, redaction and sharing. Building them again would take the whole event.
+**Decision:** Import DigiVault as the base of this repository, without its Git history, as one commit. The organisers approved the reuse. The import and what changes during the event are recorded in `docs/PRIOR_WORK.md` and in the README's Origins section. The commit history after the import commit shows the event work.
+**Consequences:** The vault is real and inherited; the chat features are new. The demo and the docs must say so. The individual organiser's name and the written confirmation are still to be added to `docs/PRIOR_WORK.md`. An earlier VeriDoc design said "no DigiVault code is reused"; that statement no longer holds and must not be copied from the old documents.
+
+## ADR-037 — Rename in the UI only
+**Status:** Accepted (2026-10-25)
+**Context:** The screens say "case", "officer", "court" and so on. VeriDoc is about agreements between two people.
+**Decision:** Change wording only: "case" becomes "agreement"; roles show as "party" (`POLICE_OFFICER`, `INVESTIGATING_OFFICER`) and "reviewer" (`COURT_OFFICIAL`, `FORENSIC_LAB`); "Court Verification Portal" becomes "Verify page". The front end and the redaction screens (tiles, preview, confirm, share link, verify page) keep their behaviour and layout.
+**Consequences:** Low risk and reversible. Code identifiers, routes, table and column names keep the old words. The mapping of two roles onto "party" is an open question (`docs/TRIM_PLAN.md`). See ADR-039 for what must not change.
+
+## ADR-038 — Fake model first, behind a model adapter; local model later
+**Status:** Accepted (2026-10-25); implemented for the fake adapter, local adapter is a stub
+**Context:** Small local models are the riskiest part, need hardware testing and a pinned model that is not chosen yet. The rest of the product must not wait for them, and a demo must not pretend a recording is a live model.
+**Decision:** All model use goes through one interface, `extract(numbered_chat, playbook_id)`. `MODEL_MODE=fake` (default) replays recorded output, including mistakes a real model makes (a wrong price, a missed advance). `MODEL_MODE=local` will use `llama-server` with a GGUF file checked against `models/manifest.json`. While the mode is fake, every page shows "Demo mode: recorded model output", and the badge text can be changed but not switched off. The model only suggests: every term needs a verbatim source quote and a human confirmation, rules run first, and chat text is data, never instructions (`docs/AI_SPEC.md`).
+**Consequences:** The product can be built and demonstrated honestly without a model. The `quote` field is not in the adapter yet (`docs/AI_SPEC.md` section 11). The local adapter is a stub and the manifest holds a placeholder until a model is chosen. This replaces the earlier VeriDoc plan of `llama-cpp-python` with `llama-server`, because the settings already name `LLAMA_SERVER_PATH`.
+
+## ADR-039 — No audit or schema renames
+**Status:** Accepted (2026-10-25)
+**Context:** Audit rows hash their `action` and `targetMeta` into the hash chain (ADR-020), and anchored audit heads cover them. The `Role` enum is a database type. Renaming either would force a migration or make new rows disagree with old ones.
+**Decision:** The database columns, the `Role` enum values and every audit action string (`CREATE_CASE`, `UPLOAD_DOCUMENT_VERSION`, `CONFIRM_REDACTIONS` and the rest) do not change. Unused columns (`firRegisteredAt`, `offenceSections`) stay. New audit actions may be added later only by a new ADR; none are needed for the MVP. No Prisma migration is part of the VeriDoc event work unless a new ADR says so.
+**Consequences:** Some code and the audit page keep old words internally. That is accepted. The high-risk rename step in `docs/TRIM_PLAN.md` is skipped.
+
+## ADR-040 — The chat is saved as an ordinary PDF through the normal upload
+**Status:** Proposed (needs a human decision)
+**Context:** The vault hashes rendered document pages. A chat is text, and voice notes are audio. Adding a new kind of evidence to the hash path would change the proof format, which `CLAUDE.md` forbids without the spec process.
+**Decision (proposed):** The browser builds a PDF of the agreement record (numbered messages, the SHA-256 of the original export and of each voice-note file printed on the first page; later the confirmed terms, the recap and the pasted confirmation) and uploads it through `POST /api/v1/evidence/upload`. Each later step is a new version of the same `document_id`. The existing pipeline then hashes, chains, anchors and audits it with no change. The AI service never sees or writes this path.
+**Consequences:** No new hash format and no migration. Voice-note audio itself is covered only by the fingerprint on the page, not stored by the vault. Pending (unconfirmed) terms are not stored anywhere; they live on the review screen. Not built yet.
+
