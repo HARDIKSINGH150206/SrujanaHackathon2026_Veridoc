@@ -1,0 +1,127 @@
+{
+  "recordings": [
+    {
+      "playbook_id": "supply-order",
+      "chat_sha256": "87de4cbb1d0950d63c671bffd5b02b8b278d656ae349711df9793cd3ddcbcaaf",
+      "terms": [
+        {
+          "kind": "quantity",
+          "label": "Notebooks ordered",
+          "value": "200",
+          "source_lines": [
+            1,
+            2
+          ]
+        },
+        {
+          "kind": "unit_price",
+          "label": "Price per notebook (INR)",
+          "value": "54",
+          "source_lines": [
+            2,
+            4
+          ]
+        },
+        {
+          "kind": "total_price",
+          "label": "Order total (INR)",
+          "value": "9000",
+          "source_lines": [
+            2
+          ]
+        },
+        {
+          "kind": "advance",
+          "label": "Advance paid (INR)",
+          "value": "3000",
+          "source_lines": [
+            6,
+            7
+          ]
+        },
+        {
+          "kind": "balance",
+          "label": "Balance due on delivery (INR)",
+          "value": "6000",
+          "source_lines": [
+            6
+          ]
+        },
+        {
+          "kind": "deadline",
+          "label": "Delivery date",
+          "value": "2026-03-20",
+          "source_lines": [
+            4,
+            8
+          ]
+        },
+        {
+          "kind": "inclusion",
+          "label": "School logo on cover, no extra charge",
+          "value": "included",
+          "source_lines": [
+            9,
+            10
+          ]
+        }
+      ]
+    },
+    {
+      "playbook_id": "freelance-job",
+      "chat_sha256": "847ea1992d795578f62d352e20737abf630856c60547b00faded24d1e6d84ae1",
+      "terms": [
+        {
+          "kind": "deliverable",
+          "label": "Logo and 3 Instagram post designs",
+          "value": "logo + 3 posts",
+          "source_lines": [
+            1
+          ]
+        },
+        {
+          "kind": "total_price",
+          "label": "Package price (INR)",
+          "value": "6000",
+          "source_lines": [
+            2
+          ]
+        },
+        {
+          "kind": "revision_limit",
+          "label": "Revisions included",
+          "value": "2",
+          "source_lines": [
+            2
+          ]
+        },
+        {
+          "kind": "extra_charge",
+          "label": "Third revision (INR)",
+          "value": "500",
+          "source_lines": [
+            7
+          ]
+        },
+        {
+          "kind": "deadline",
+          "label": "Final files due",
+          "value": "2026-04-10",
+          "source_lines": [
+            3,
+            4
+          ]
+        },
+        {
+          "kind": "balance",
+          "label": "Balance due after delivery (INR)",
+          "value": "4000",
+          "source_lines": [
+            6,
+            7
+          ]
+        }
+      ]
+    }
+  ]
+}
