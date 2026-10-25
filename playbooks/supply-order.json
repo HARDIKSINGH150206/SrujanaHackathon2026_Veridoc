@@ -1,0 +1,14 @@
+{
+  "id": "supply-order",
+  "title": "Supply or order",
+  "terms": [
+    {"key": "parties", "label": "Parties", "type": "party", "required": false},
+    {"key": "quantity", "label": "Quantity", "type": "quantity", "required": true},
+    {"key": "unit_price", "label": "Price per piece (INR)", "type": "money", "required": true},
+    {"key": "total_price", "label": "Order total (INR)", "type": "money", "required": true},
+    {"key": "advance", "label": "Advance paid (INR)", "type": "money", "required": true},
+    {"key": "balance", "label": "Balance and when it is due (INR)", "type": "money", "required": true},
+    {"key": "deadline", "label": "Delivery date", "type": "date", "required": true},
+    {"key": "inclusion", "label": "Anything included at no extra charge", "type": "text", "required": false}
+  ]
+}

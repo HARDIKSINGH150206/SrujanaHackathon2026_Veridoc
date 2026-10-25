@@ -7,6 +7,8 @@ from fastapi import FastAPI, HTTPException
 from .model_adapter import adapter_from_env
 from .real_suggestions import generate_suggestions
 from .schemas import SuggestionRequest, SuggestionResponse
+from .terms_router import router as terms_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,6 +22,8 @@ app = FastAPI(title="DigiVault AI Service", lifespan=lifespan, description=(
         "Suggests grid tiles to redact; suggestion-only, never touches the Merkle hash."
     ),
 )
+
+app.include_router(terms_router)
 
 
 @app.get("/health")

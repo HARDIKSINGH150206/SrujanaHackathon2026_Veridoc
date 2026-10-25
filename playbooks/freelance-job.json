@@ -1,0 +1,14 @@
+{
+  "id": "freelance-job",
+  "title": "Freelance job",
+  "terms": [
+    {"key": "parties", "label": "Parties", "type": "party", "required": false},
+    {"key": "deliverable", "label": "What will be delivered", "type": "text", "required": true},
+    {"key": "total_price", "label": "Package price (INR)", "type": "money", "required": true},
+    {"key": "revision_limit", "label": "Revisions included", "type": "quantity", "required": true},
+    {"key": "extra_charge", "label": "Price of extra work (INR)", "type": "money", "required": false},
+    {"key": "deadline", "label": "Final files due", "type": "date", "required": true},
+    {"key": "advance", "label": "Advance paid (INR)", "type": "money", "required": true},
+    {"key": "balance", "label": "Balance and when it is due (INR)", "type": "money", "required": true}
+  ]
+}

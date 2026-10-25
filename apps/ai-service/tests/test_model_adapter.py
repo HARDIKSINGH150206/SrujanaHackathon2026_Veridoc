@@ -12,29 +12,24 @@ from app.model_adapter import (
     build_adapter,
     chat_fingerprint,
     check_model_output,
-    number_chat,
 )
+from app.chat_import import format_numbered, parse_chat
 from app.settings import settings_from_env
 
 SAMPLES = Path(__file__).resolve().parents[3] / "samples" / "veridoc"
 
 
 def sample(name: str) -> str:
-    return number_chat((SAMPLES / "chats" / f"{name}.txt").read_text(encoding="utf-8"))
+    return numbered((SAMPLES / "chats" / f"{name}.txt").read_text(encoding="utf-8"))
+
+
+def numbered(raw: str) -> str:
+    return format_numbered(parse_chat(raw).messages)
 
 
 def gold(name: str) -> dict[str, dict]:
     data = json.loads((SAMPLES / "expected" / f"{name}.json").read_text(encoding="utf-8"))
     return {t["kind"]: t for t in data["terms"]}  # the gold file calls the term key "kind"
-
-
-class NumberChatTests(unittest.TestCase):
-    def test_numbers_lines_from_one_and_skips_blanks(self):
-        self.assertEqual(number_chat("a\n\n b \nc\n"), "[1] a\n[2] b\n[3] c")
-
-    def test_empty_chat_is_rejected(self):
-        with self.assertRaises(ValueError):
-            number_chat("\n \n")
 
 
 class OutputFormatTests(unittest.TestCase):
@@ -108,7 +103,7 @@ class FakeAdapterTests(unittest.TestCase):
 
     def test_unrecorded_chat_or_playbook_is_an_error_not_a_guess(self):
         with self.assertRaises(RecordingNotFound):
-            self.adapter.extract(number_chat("some other chat"), "supply-order")
+            self.adapter.extract(numbered("12/03/2026, 10:00 - A: some other chat"), "supply-order")
         with self.assertRaises(RecordingNotFound):
             self.adapter.extract(sample("supply-order"), "freelance-job")
 
@@ -118,7 +113,7 @@ class FakeAdapterTests(unittest.TestCase):
             for key, term in self.adapter.extract(sample(name), name)["terms"].items():
                 for quote, n in zip(term["quote"], term["msg"]):
                     self.assertTrue(1 <= n <= len(lines), f"{name}.{key}: msg {n}")
-                    self.assertIn(quote, lines[n - 1], f"{name}.{key}")
+                    self.assertIn(quote, lines[n - 1], f"{name}.{key}")  # the numbered line holds sender and text
 
 
 class RecordedMistakesTests(unittest.TestCase):

@@ -2,7 +2,7 @@
   "recordings": [
     {
       "playbook_id": "supply-order",
-      "chat_sha256": "87de4cbb1d0950d63c671bffd5b02b8b278d656ae349711df9793cd3ddcbcaaf",
+      "chat_sha256": "d198cdaa8da6a71441b3cfaa34ca6f19cdc4781b5fbd19be165b0253024d21e3",
       "output": {
         "terms": {
           "quantity": {
@@ -87,7 +87,7 @@
     },
     {
       "playbook_id": "freelance-job",
-      "chat_sha256": "847ea1992d795578f62d352e20737abf630856c60547b00faded24d1e6d84ae1",
+      "chat_sha256": "b85d8b403dd7c9c4fa7c318d423bfc17b306c1904f44229d9549e2d8f679f099",
       "output": {
         "terms": {
           "deliverable": {

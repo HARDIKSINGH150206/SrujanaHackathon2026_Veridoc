@@ -40,14 +40,6 @@ class RecordingNotFound(LookupError):
     pass
 
 
-def number_chat(raw: str) -> str:
-    """Prefix each non-blank line with its 1-based number: `[1] first line`."""
-    lines = [line.strip() for line in raw.splitlines() if line.strip()]
-    if not lines:
-        raise ValueError("chat has no lines")
-    return "\n".join(f"[{n}] {line}" for n, line in enumerate(lines, start=1))
-
-
 def check_term(term: object) -> list[str]:
     """Problems with one term in the model format; empty if it is well formed."""
     if not isinstance(term, dict):
