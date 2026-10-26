@@ -6,6 +6,28 @@ VeriDoc is a drafting and record-keeping aid, not legal advice. It makes a recor
 
 Problem: LS-06, *From Handshake to Contract* (informal agreements between two people), Srujana Hackathon.
 
+## Two components
+
+| Component | What it is | Where | Status |
+|---|---|---|---|
+| **Application and evidence vault** | Web app, AI service (chat import, terms, flags, recap, echo code), hash-based vault, anchoring, public verify page | This repository | Built and tested. Runs on recorded model output |
+| **Offline engine** | A small model fine-tuned by the team (Qwen3-0.6B, 8-bit), a rules engine, terminal tools and a local API, run from a pendrive with no internet | A separate codebase, **not in this repository**, not yet connected to the app | Run on macOS (Apple Silicon). Windows and Linux packaged, untested |
+
+The planned connection is `LocalModelAdapter` (a stub today). Full product report: `docs/PROJECT_REPORT.md`.
+
+## At a glance (offline engine, own measurements)
+
+| | |
+|---|---|
+| Internet needed | None |
+| Speed | About 2 s per chat on a MacBook M4 |
+| Terms correct | 72.0% strict, 78.0% lenient |
+| Deal type correct | 91.7% |
+| Chats fully correct | 2.8% strict, 16.7% lenient |
+| Test set | 36 held-out, realistic, **synthetic** chats, 25 to 26 Oct 2026 |
+
+These are the engine's figures, not this repository's recorded demo, and they are a target until measured on real Indian chats. Only a few chats come out fully correct, so a person confirms every term.
+
 ## The flow
 
 **Handshake** (import the chat, see proposed terms and flags) → **Recap** (plain-language recap, confirmed with an echo code) → **Receipt** (saved in the vault, anchored, checkable).
@@ -34,7 +56,7 @@ Honest status (full table in `docs/PRD.md` section 8):
 - **Built, on recorded transcripts:** voice notes in a WhatsApp export folder (numbered with time spans, audio SHA-256, play the moment, text-versus-voice contradiction). The transcript is recorded, not speech recognition, and the badge says "recorded transcript".
 - **Not built yet:** saving the pasted reply as a further version; correcting a term before confirming it; real speech recognition (`LocalTranscriber` is a stub); the live local model (`LocalModelAdapter` is a stub, and no model is pinned in `models/manifest.json`).
 
-A small local model was run separately on a laptop through a terminal command. It is not wired into the app. The model only suggests, rules check it, and a human confirms every term.
+The offline engine (above) is a separate component and is not wired into the app. The model only suggests, rules check it, and a human confirms every term.
 
 The AI only suggests. It never writes to the vault, the audit log or the hash path.
 
@@ -42,14 +64,15 @@ The AI only suggests. It never writes to the vault, the audit log or the hash pa
 
 | | |
 |---|---|
-| `docs/PRD.md` | Problem, example, flow, six features with acceptance criteria, MVP versus later, real versus demo |
-| `docs/TECH_STACK.md` | The stack, what we add, the local model on the pendrive |
-| `docs/ARCHITECTURE.md` | Parts, data flow from chat to receipt, the AI boundary |
-| `docs/AI_SPEC.md` | Extraction, grounding, flags, injection defence, hardware tiers |
+| `docs/PROJECT_REPORT.md` | The full product report: problem, solution, architecture, benchmark, limits, viability, future scope |
+| `docs/PRD.md` | Problem, example, users and market, flow, six features, offline engine requirements, MVP versus later, real versus demo, risks |
+| `docs/TECH_STACK.md` | The stack, what we add, the local model and the offline engine stack, licences |
+| `docs/ARCHITECTURE.md` | Parts, data flow from chat to receipt, the AI boundary, the offline engine |
+| `docs/AI_SPEC.md` | Extraction, grounding, flags, injection defence, runtime, the engine's model, data and benchmark |
 | `docs/TRIM_PLAN.md` | What is kept, renamed and removed from DigiVault, and in what order |
 | `docs/DECISIONS.md` | Decision log (ADR-036 onwards are VeriDoc) |
-| `docs/DEMO_RUNBOOK.md` | Click-by-click demo, one-command start, offline fallback |
-| `docs/PRIOR_WORK.md` | What was imported from DigiVault |
+| `docs/DEMO_RUNBOOK.md` | Click-by-click demo, one-command start, offline fallback, offline engine demo |
+| `docs/PRIOR_WORK.md` | What was imported from DigiVault, what was built, third-party material and licences |
 | `docs/02`, `docs/03` | Integrity references (data flow, hashing and Merkle spec) |
 | `docs/digivault-archive/` | Pre-event DigiVault documents: developer guide (`DEVELOPMENT.md`), API spec, demo path, redaction measurements, and the rest (see its README) |
 
@@ -154,7 +177,9 @@ Settings (`MODEL_MODE`, `MODEL_FILE_PATH`, `MODEL_SHA256`, `LLAMA_SERVER_PATH`, 
 - The vault shows a record is unchanged since it was saved. It does not show the original chat export was genuine.
 - The echo code ties a reply to one recap text. It does not show who typed the reply.
 - Drafting aid, not legal advice.
-- Accuracy and speed figures are targets until measured.
+- Accuracy and speed figures are targets until measured. The engine's figures come from 36 synthetic chats and are not a claim about real chats.
+- The offline engine is not integrated with the app, and Windows and Linux builds of it are untested.
+- Chats saved on the pendrive are not encrypted.
 
 ## Origins
 

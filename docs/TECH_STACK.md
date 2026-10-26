@@ -39,25 +39,57 @@ Inherited from DigiVault and working (`docs/digivault-archive/DEVELOPMENT.md` ha
 | Recap and suggestion templates | `playbooks/recap/` | Built |
 | Transcriber interface, recorded transcripts, local stub | `apps/ai-service/app/transcriber.py`, `recorded/transcripts.json` | Built; local (faster-whisper) is a stub |
 | Voice notes in an export folder, chat record PDF with the audio SHA-256 | `chat_import.py` (`import_export`), `apps/web/src/lib/chat-record.ts`, `terms-view.tsx` | Built |
-| Chat record builder (chat to PDF in the browser, then the normal upload) | `apps/web` | Planned (ADR-040, accepted) |
+| Chat record builder (chat to PDF in the browser, then the normal upload) | `apps/web/src/lib/chat-record.ts` | Built (ADR-040, accepted) |
 
 Python libraries added: `pypdf` (text PDFs) and `httpx` (route tests). The rules use only the standard library; `dateparser` and `rapidfuzz` are not used.
 
 ## 3. The local model on the pendrive
 
-The demo laptop runs Linux. The model runs offline from a pendrive.
+The model runs offline from a pendrive. Two things must be kept apart: the **offline engine** (separate codebase, model chosen and measured, `PROJECT_REPORT.md`) and the **application's adapter** (`LocalModelAdapter`, a stub, with the manifest still a placeholder).
 
 | Part | Choice |
 |---|---|
-| Runtime | `llama-server` from llama.cpp, a Linux build, started by the AI service as a local process and called over `127.0.0.1`. Its path is `LLAMA_SERVER_PATH` |
-| Model file | A GGUF file. Its path is `MODEL_FILE_PATH`. Weights are never committed (`models/*`, `*.gguf` are in `.gitignore`) |
+| Runtime | `llama-server` from llama.cpp, called over `127.0.0.1`. In the application its path is `LLAMA_SERVER_PATH` and the AI service starts it. The engine bundles release b11869 for macOS (Metal), Windows and Linux (Vulkan or CPU) |
+| Model | Qwen3-0.6B (Apache 2.0), LoRA fine-tuned (v4), GGUF Q8_0, file `veridoc-small-v4-Q8_0.gguf` (ADR-043). Its path in the application would be `MODEL_FILE_PATH`. Weights are never committed (`models/*`, `*.gguf` are in `.gitignore`) |
 | Integrity check | `models/manifest.json` pins the SHA-256 of each allowed model file. At startup in `local` mode the service hashes the file and refuses to start if it is missing, unlisted, unpinned or different by one byte. If `MODEL_SHA256` is set it must also agree with the manifest |
-| Model choice | Not decided. The manifest holds a placeholder entry (`PLACEHOLDER-model.gguf`, all-zero hash) that is always refused |
-| Output | The model is asked for JSON that matches a schema (grammar-constrained decoding in llama.cpp) |
+| Manifest today | A placeholder entry (`PLACEHOLDER-model.gguf`, all-zero hash) that is always refused. The v4 file's hash must be pinned before `local` mode can start |
+| Output | JSON that matches a schema (grammar-constrained decoding in llama.cpp; valid JSON 88.9% without it, 100% with it, ADR-044) |
 | Network | None. The model has no tools, no file access and no write access |
-| Tiers | Chosen by RAM at startup: about 7B, 3B or 1.5B, 4-bit; rules only below that (`AI_SPEC.md` section 8). Sizes are proposals until benchmarked |
+| Tiers | 0.6B shipped; 1.7B and 4B defined in the engine's `config/models.json`, untested. The earlier 7B, 3B and 1.5B proposals are superseded |
 
-Until a model is pinned and `LocalModelAdapter` is implemented, `MODEL_MODE` stays `fake` and the app says "Demo mode: recorded model output".
+Until `LocalModelAdapter` is implemented and a model is pinned, `MODEL_MODE` stays `fake` and the app says "Demo mode: recorded model output".
+
+### 3.1 The offline engine stack (separate codebase)
+
+| Layer | Choice |
+|---|---|
+| Application code | Python 3.12, standard library only |
+| Runtime | python-build-standalone 3.12.15 per OS, bundled; nothing to install on the host |
+| Inference | llama.cpp `llama-server` b11869 (Metal, Vulkan, CPU) |
+| Drive | exFAT, readable by macOS, Windows and Linux; per-OS launchers |
+| API | Standard-library HTTP server on `127.0.0.1:8765`; no database |
+| Training | PyTorch, Hugging Face transformers 5.20.2, PEFT, accelerate on a Kaggle T4; MLX on a Mac for v1 to v3 |
+| Evaluation | `evaluate.py` on 36 held-out realistic chats |
+| Platforms | macOS Apple Silicon tested; Windows and Linux packaged, untested |
+
+### 3.2 Licences
+
+| Component | Licence |
+|---|---|
+| Qwen3-0.6B | Apache 2.0 |
+| llama.cpp | MIT |
+| PyTorch, transformers, PEFT | BSD-3 / Apache 2.0 |
+| python-build-standalone | PSF and bundled licences |
+| CraigslistBargains (1,500 training chats) | Listed as unknown; research and demo use only. Retrain without it, or get permission, before commercial release (ADR-046) |
+
+### 3.3 Engine environment variables
+
+| Variable | Purpose |
+|---|---|
+| `VERIDOC_CPU_ONLY` | `1` forces the CPU engine instead of Vulkan |
+| `PYTHONUTF8` | Set to `1` by the Windows launcher so chats with emoji read correctly |
+
+The engine has no keys, secrets or accounts.
 
 ## 4. Configuration
 
