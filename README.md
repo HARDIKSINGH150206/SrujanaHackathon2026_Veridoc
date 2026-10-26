@@ -10,7 +10,9 @@ Problem: LS-06, *From Handshake to Contract* (informal agreements between two pe
 
 **Handshake** (import the chat, see proposed terms and flags) → **Recap** (plain-language recap, confirmed with an echo code) → **Receipt** (saved in the vault, anchored, checkable).
 
-Example: Raju and Meena agree on 200 shirts at ₹480, with half paid in advance and delivery "next week". VeriDoc marks delivery **unclear** and the final payment and late penalty **missing**, and suggests asking about them.
+Example, from the synthetic supply-order sample (`samples/veridoc/chats/supply-order.txt`): Dev orders 200 notebooks from Kavi at ₹45 each, ₹9,000 in total, with ₹3,000 advance and ₹6,000 on delivery on 20 March, and the school logo free of charge. The recorded model output used in the demo contains a deliberate mistake: it reads the price as 54 while quoting "₹45 per piece". VeriDoc checks the value against the quote, so that term is marked **needs review**, not stated, and the recap lists it as an open point. The only flag it raises is **unconfirmed** on the logo term: Kavi said it last and Dev did not reply. The other terms come out **stated**, each with its source message.
+
+A second sample with a voice note (`samples/veridoc/voice-export/`): the text says ₹45 per piece and the voice note says 50 rupees, so the price is **contradicted**, and a text-versus-voice flag names both messages. The voice is synthetic text-to-speech and its transcript is recorded.
 
 ## The six features
 
@@ -26,11 +28,13 @@ Example: Raju and Meena agree on 200 shirts at ₹480, with half paid in advance
 Honest status (full table in `docs/PRD.md` section 8):
 
 - **Real:** the evidence vault (feature 6), anchoring, the verify page, redaction and share links, the audit log, typed settings, the model adapter interface, and the model-file hash check.
-- **Demo:** model output is **recorded** for two synthetic chats and replayed by a fake adapter. While `MODEL_MODE=fake` (the default) every page shows "Demo mode: recorded model output".
+- **Demo:** model output is **recorded** for the synthetic samples (two chats and one voice-note export) and replayed by a fake adapter. While `MODEL_MODE=fake` (the default) every page shows "Demo mode: recorded model output"; while `TRANSCRIBER_MODE=fake` (the default) it also says "recorded transcript".
 - **Built, on recorded model output:** the chat parser (WhatsApp exports, text PDFs), the term extractor with quote and value checks, the seven rule flags, and a Chat terms screen. Everything that fails a check shows as needs review.
 - **Built:** confirming stated terms, a recap in English and Hindi (fixed templates, no model text), suggested next messages in three tones, saving the recap through the normal upload, and an echo code with a reply check (`docs/RECAP_DESIGN.md`).
 - **Built, on recorded transcripts:** voice notes in a WhatsApp export folder (numbered with time spans, audio SHA-256, play the moment, text-versus-voice contradiction). The transcript is recorded, not speech recognition, and the badge says "recorded transcript".
-- **Not built yet:** saving the pasted reply as a further version, correcting a term before confirming it, voice notes, the local model (a stub; no model is pinned).
+- **Not built yet:** saving the pasted reply as a further version; correcting a term before confirming it; real speech recognition (`LocalTranscriber` is a stub); the live local model (`LocalModelAdapter` is a stub, and no model is pinned in `models/manifest.json`).
+
+A small local model was run separately on a laptop through a terminal command. It is not wired into the app. The model only suggests, rules check it, and a human confirms every term.
 
 The AI only suggests. It never writes to the vault, the audit log or the hash path.
 
@@ -97,16 +101,33 @@ docker exec veridoc-postgres psql -U veridoc -d veridoc \
 cd apps/ai-service && python3 -m venv .venv \
   && .venv/bin/pip install -r requirements.txt \
   && .venv/bin/python -m spacy download en_core_web_sm && cd ../..
-cd apps/web && node --experimental-strip-types prisma/seed-demo.ts && cd ../..   # demo accounts
 ```
 
 ### Start
 
 ```bash
-docker compose up -d && (cd apps/ai-service && MODEL_MODE=fake .venv/bin/uvicorn app.main:app --port 8001 &) && MODEL_MODE=fake pnpm --filter @digivault/web dev
+docker compose up -d --wait && (cd apps/ai-service && MODEL_MODE=fake .venv/bin/uvicorn app.main:app --port 8001 &) && MODEL_MODE=fake pnpm --filter @digivault/web dev
 ```
 
-Open http://localhost:3000. The "Demo mode: recorded model output" badge should show on every page. WebAuthn needs a secure context: use `http://localhost` or HTTPS. Demo accounts are listed in `docs/digivault-archive/05-demo-golden-path.md` section 1.
+Open http://localhost:3000. The "Demo mode: recorded model output and recorded transcript" badge should show on every page. WebAuthn needs a secure context: use `http://localhost` or HTTPS.
+
+With the web app running, seed the demo accounts and data in another terminal. The seed goes through the real upload pipeline, so it needs the web app up; without an Amoy RPC the anchors show as failed and can be retried from the version page:
+
+```bash
+cd apps/web && node --experimental-strip-types prisma/seed-demo.ts
+```
+
+It creates these accounts (development values, from `apps/web/prisma/seed-demo.ts`):
+
+| Sign-in ID | PIN | Shown as |
+|---|---|---|
+| `ADMIN-ASHA` | `112233` | Admin |
+| `PARTY-DEV` | `224466` | Party |
+| `PARTY-IRA` | `335577` | Party |
+| `REVIEWER-1` | `446688` | Reviewer (read-only) |
+| `VERIFIER-1` | `557799` | Verifier (read-only) |
+
+and two agreements: `AGR/2026/0001` (the supply-order chat export and the order confirmation) and `AGR/2026/0002` (the freelance-job chat export). For the click-by-click demo, see `docs/DEMO_RUNBOOK.md`.
 
 ### Tests
 
@@ -123,6 +144,7 @@ Settings (`MODEL_MODE`, `MODEL_FILE_PATH`, `MODEL_SHA256`, `LLAMA_SERVER_PATH`, 
 ## Smart Contract
 
 - Network: Polygon Amoy (testnet, chainId 80002)
+- Both contracts below were deployed before the hackathon, as part of DigiVault (the deployment records are dated 26 September and 18 October 2026).
 - **Current — EvidenceAnchorV2:** `0x01e7e6f83f55873E906465d3447cB43434D4ee67` ([explorer](https://amoy.polygonscan.com/address/0x01e7e6f83f55873E906465d3447cB43434D4ee67)), deployed in block 50527642. Owner and first anchorer: `0x30F5fD617B9f7f73eCED0FB37dB2cd7dFEB32873`. Two-step ownership transfer, anchorer allow-list with retire/revoke, audit-log heads (ADR-028). Source `packages/contracts/contracts/EvidenceAnchorV2.sol`; record `packages/contracts/deployments/amoy-v2.json`.
 - **Legacy — EvidenceAnchor v1:** `0xFAf1031E2A4EF75Cf871bF93035DA062AB6D1A5b` ([explorer](https://amoy.polygonscan.com/address/0xFAf1031E2A4EF75Cf871bF93035DA062AB6D1A5b)), block 48603680, owner-only writes. Anchors written before contract v2 stay here and still verify; nothing new is written. Source `packages/contracts/contracts/EvidenceAnchor.sol`; record `packages/contracts/deployments/amoy.json`.
 
@@ -135,4 +157,32 @@ Settings (`MODEL_MODE`, `MODEL_FILE_PATH`, `MODEL_SHA256`, `LLAMA_SERVER_PATH`, 
 - Accuracy and speed figures are targets until measured.
 
 ## Origins
-VeriDoc is built on DigiVault, our earlier project written before the hackathon. The reuse was approved by the organiser. See docs/PRIOR_WORK.md for what was imported and what changed during the event.
+
+VeriDoc is built on **DigiVault**, our earlier project, written before the hackathon. It was imported into this repository as one commit, `e3a0496` ("chore: import DigiVault as the project base (pre-event project, reuse approved by organiser)"), without its old Git history. The organiser approved the reuse. `docs/PRIOR_WORK.md` records what was imported and what changed.
+
+**Reused from DigiVault.** Between the import and now, `git diff --stat e3a0496..main` shows no change to `packages/crypto-core`, `packages/contracts`, `prisma/schema.prisma` or the migrations, and only wording and default-port edits in the upload route and `storage.ts`:
+- the evidence vault, with the client-first and server re-verified hashing
+- the hash chain and the salted Merkle tree
+- anchoring in MinIO (Object Lock) and on Polygon Amoy, and the two contracts
+- redaction suggestions and tiles
+- share links
+- the insert-only, hash-chained audit trail
+- the certificate PDF (still carries its original wording; `docs/TRIM_PLAN.md` step 6 replaces it)
+
+**Built during the event** (`git log --oneline e3a0496..main`: 40 commits; `git diff --stat`: 131 files changed):
+- chat and voice-note import (`chat_import.py`, `transcriber.py`, recorded transcripts) and the synthetic samples
+- the term extractor with quote and value-versus-quote grounding (`term_extractor.py`), the model adapter and model-file check (`model_adapter.py`, `model_manifest.py`), and the Chat terms screen
+- the rule flags, including text-versus-voice contradiction, and playbooks (`playbooks/`)
+- the recap, echo code and recap PDF (`recap.py`, `echo-code.ts`, `recap-pdf.ts`, the Recap screen) and the chat recommendation (suggested messages, in `recap.py`)
+- typed settings, the demo badge, and the chat record saved with the voice note's audio fingerprint (`chat-record.ts`)
+- the wording pass (agreement, Party, Reviewer, Verifier, on the landing page, login, dashboards and verify page)
+- VeriDoc's own compose stack (`docker-compose.yml`, `scripts/check-compose-isolation.sh`)
+- the documentation, with the DigiVault documents moved to `docs/digivault-archive/`
+
+## Contributors
+
+- **Hardik Singh** ([HARDIKSINGH150206](https://github.com/HARDIKSINGH150206)): author of this repository.
+- **Abhishek** ([absksync](https://github.com/absksync)): trained the local model (the weights are not in the repository).
+- **Samanway** ([notorious1337](https://github.com/notorious1337)) and **Jhashank** ([NYN-05](https://github.com/NYN-05)): built part of the earlier Python version, which is reference only.
+
+DigiVault's original authors are listed in `docs/PRIOR_WORK.md`.
