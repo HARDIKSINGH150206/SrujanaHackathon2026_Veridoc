@@ -25,23 +25,31 @@ Small operators close deals on WhatsApp and by voice note: a tailor, a printer, 
 
 The real problem is the social friction of asking for a contract, plus the fact that nobody says what is missing while the conversation is still going on.
 
-## 2. Example: Raju and Meena
+## 2. Example: Dev and Kavi
 
-Raju is a cloth wholesaler. Meena is a tailor. In chat they agree on 200 shirts at ₹480 each. Raju says "advance half now" and Meena sends ₹48,000. Meena says "delivery next week". Nobody says when the balance is due or what happens if delivery is late.
+The synthetic supply-order sample (`samples/veridoc/chats/supply-order.txt`, reference terms in `samples/veridoc/expected/supply-order.json`). Dev orders 200 notebooks from Kavi. Kavi quotes ₹45 per piece and ₹9,000 in total, asks for ₹3,000 advance and ₹6,000 on delivery, and promises delivery by 20 March. Dev pays the advance by UPI, and Kavi says the school logo on the cover is free.
+
+What VeriDoc produces from the **recorded model output** for this chat (`apps/ai-service/recorded/recordings.json`; the output is recorded, not live, and it contains one deliberate mistake):
 
 | Term | Status | Why |
 |---|---|---|
-| Parties | stated | Both named in the chat |
-| Quantity | stated | 200 shirts |
-| Price | stated | ₹480 each, ₹96,000 in total |
-| Advance | stated | ₹48,000 paid |
-| Delivery date | **unclear** | "Next week" is not a day |
-| Final payment | **missing** | Never discussed |
-| Late penalty | **missing** | Never discussed |
+| Quantity | stated | 200 notebooks (message 1) |
+| Price per piece | **needs review** | The recorded output says 54 but quotes "₹45 per piece" (message 2). The value does not follow from the quote, so it is not shown as stated |
+| Order total | stated | ₹9,000 (message 2) |
+| Advance | stated | ₹3,000 (message 6) |
+| Balance | stated | ₹6,000 on delivery (message 6) |
+| Delivery date | stated | 20 March 2026 (message 4) |
+| Logo at no extra charge | stated | Free (message 10) |
 
-VeriDoc flags delivery as unclear and flags final payment and late penalty as missing. It suggests one friendly next message ("Just to confirm: delivery by 15 Nov and the balance ₹48,000 on delivery, right?"; the date is an example, the user sets the real one). Once the gaps are closed, it writes a short recap in plain language, the other person confirms it by replying with a code, and the whole record is saved in the vault with a receipt anyone can check.
+The only flag is **unconfirmed** on the logo term: Kavi said it last and Dev did not reply. The optional "parties" term is not in the recorded output, so it shows as missing but is not an open point.
 
-The sample chats in `samples/veridoc/` are synthetic stand-ins of the same shape (a supply order and a freelance job).
+When the person confirms the six stated terms, the recap lists them and puts the price under "Still to settle: Price per piece: still to be checked." The suggested next message for that open point is, in the friendly tone: "Hi Kavi, I read "₹45 per piece" for Price per piece. Can you confirm that is right?" The message quotes the chat and never repeats the value that failed its check. Once the open point is settled, the other person confirms the recap by replying with a code, and the whole record is saved in the vault with a receipt anyone can check.
+
+This sample does not produce an **unclear** or a **missing** flag. Those statuses are checked by unit tests instead (for example "next week" gives unclear, and a required term nobody mentioned gives missing).
+
+A second sample, `samples/veridoc/voice-export/`, has a voice note: the text says ₹45 per piece and the voice note says 50 rupees, so the price is **contradicted**, with a flag naming both messages. The voice is synthetic text-to-speech and its transcript is recorded. The freelance-job sample (`samples/veridoc/chats/freelance-job.txt`) shows the other recorded mistake: the model's output marks the advance as missing although the chat states it.
+
+All sample data is synthetic.
 
 ## 3. Flow: Handshake, Recap, Receipt
 
@@ -109,7 +117,7 @@ Acceptance criteria
 - "Next week" gives **unclear** with a reason; a required term nobody mentioned gives **missing**.
 - Two different values for one term in two messages give **contradicted**, listing both messages; the user must choose before confirming.
 - Flags come from code and the playbook, never from the model.
-- On the Raju and Meena example the result is exactly the table in section 2.
+- On the supply-order sample with its recorded model output, the result is the table in section 2: six terms stated, the price needs review, and one flag, unconfirmed on the logo term. This is pinned by `apps/ai-service/tests/test_term_extractor.py`.
 
 ### F4. Chat recommendation
 
