@@ -13,6 +13,7 @@ Demo data is synthetic: `samples/veridoc/` (a supply-order chat, a freelance cha
 | "the record was not changed after it was saved" | "this proves the chat is real" |
 | "drafting aid, not legal advice" | any statement about whether the deal is enforceable |
 | "this is a target until measured" for any speed or accuracy figure | an accuracy number we have not measured |
+| "the offline engine, a separate component, scored 72% on 36 synthetic test chats" (section 7) | "VeriDoc is 72% accurate", or any engine figure while showing the app's recorded demo |
 
 ## 2. One-command start
 
@@ -104,3 +105,43 @@ Other failures:
 
 - Note every question asked and who answered it.
 - If a figure was quoted, check it against a measured result or retract it.
+
+## 7. Demo of the offline engine (separate component)
+
+The engine runs from a pendrive and is **not part of the application demo above**. Show it as its own demo and say so: it is a separate codebase, not connected to the app, tested on macOS (Apple Silicon) only. Windows and Linux are packaged but untested, so do not demo them. Figures are the team's own, on 36 synthetic chats, and about 2 s per chat is from a MacBook M4.
+
+### 7.1 Before
+
+| Check | Detail |
+|---|---|
+| Laptop | macOS, Apple Silicon |
+| Drive | VeriDoc pendrive plugged in; Wi-Fi turned off on stage |
+| Launcher | If macOS blocks it, right-click `Start VeriDoc.command` and choose Open |
+| Shell | In zsh run `setopt NO_BANG_HIST` before pasting chats that contain `!` |
+| Drive files copied from a Mac | `dot_clean -m /Volumes/<drive>` removes `._` files |
+| Health | `curl http://127.0.0.1:8765/api/health` answers |
+
+### 7.2 Script (about four minutes)
+
+| Time | Step | What the audience sees |
+|---|---|---|
+| 0:00 | The problem | The shirt-deal chat (`data/samples/shirt-deal.txt`): vague delivery, no payment date |
+| 0:30 | Offline start | Wi-Fi off, pendrive in, one double-click |
+| 0:50 | Analysis | `<python> app/veridoc_extract.py --root "$(pwd)" --chat data/samples/shirt-deal.txt`: terms with source messages, delivery unclear, balance date missing |
+| 1:50 | Live chat | Three terminal windows: two with `veridoc_live.py --as <Name>`, one with `--watch`; the deal sheet fills in as they type |
+| 3:00 | Hard case | A Hinglish chat and the price-conflict chat from `data/samples/tests/` |
+| 3:40 | Close | "A promise made in chat should be a promise you can prove." |
+
+`<python>` is the bundled `runtime/python/mac-arm64/bin/python3`. Optional API call:
+
+```bash
+curl -X POST http://127.0.0.1:8765/api/analyse \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Raju: 200 shirts at 480 each ok?\nMeena: ok, delivery next week", "me": "Meena"}'
+```
+
+### 7.3 Say honestly
+
+- Say the receipt step is planned in the engine; the application's vault is where records are hashed, chained and anchored today.
+- If a term is wrong on stage (a negotiated price, an advance read as the total, an unsupported deal type such as catering), say it is a known failure and that this is why every term shows its quote and a person confirms it. Do not hide or rerun it.
+- Do not say Windows or Linux work, that it reads real Indian chats at a measured rate, or that it is integrated with the app.

@@ -4,7 +4,7 @@ How a numbered chat becomes proposed terms, statuses, flags and a suggested mess
 
 Adapted from the earlier VeriDoc design (the pipeline, grounding and injection-defence ideas). The Python-only parts of that design are not carried over: the vault, storage and verification here are the DigiVault ones (`ARCHITECTURE.md`).
 
-Section 11 says what is built and what is not. Everything else describes the target.
+Section 11 says what is built in the application and what is not. Section 14 describes the separate offline engine, its model and its measured results. Everything else describes the target.
 
 ## 1. Principles
 
@@ -169,20 +169,21 @@ A term the model missed (the recorded freelance output marks the advance `missin
 
 ## 8. Hardware tiers and runtime
 
-Chosen at startup by available RAM. The sizes are proposals until benchmarked on the eval set; the choice is to be recorded in an ADR.
+The application chooses a tier at startup by available RAM. The offline engine (section 14) has measured one model; the other tiers are definitions only.
 
-| Tier | Hardware | Extraction model | Speech model |
+| Tier | Hardware | Extraction model | Status |
 |---|---|---|---|
-| High | 16 GB RAM or more | About 7B instruction model, 4-bit | small |
-| Default | 8 GB RAM | About 3B, 4-bit | small |
-| Low | 4 to 8 GB RAM or an old CPU | About 1.5B, 4-bit | base |
-| Rules only | Below Low, or the model check failed, or switched on | None | None |
+| Shipped | Ordinary laptop, 8 GB RAM, no GPU needed | Qwen3-0.6B fine-tuned, GGUF Q8_0 (engine, ADR-043) | Run and measured on macOS (Apple Silicon), engine only |
+| Larger | More memory | 1.7B, then 4B (defined in the engine's `config/models.json`) | Untested |
+| Rules only | Model check failed, or switched on | None | Built in the application (the app runs this way today) |
 
-Runtime (planned, `TECH_STACK.md` section 3):
-- `llama-server` from llama.cpp (Linux build), started by the AI service and called on `127.0.0.1`. Path in `LLAMA_SERVER_PATH`.
+The earlier 7B, 3B and 1.5B proposals are superseded. Speech model sizes are not decided; transcription is a stub (section 10).
+
+Runtime (`TECH_STACK.md` section 3):
+- `llama-server` from llama.cpp, started as a local process and called on `127.0.0.1`. In the application its path is `LLAMA_SERVER_PATH`; the engine bundles build b11869 for macOS, Windows and Linux.
 - The GGUF file named by `MODEL_FILE_PATH` must match `models/manifest.json`. A missing, unlisted, unpinned or changed file stops the service from starting in `local` mode. In that case the app can still be run with `MODEL_MODE=fake`.
 - Temperature 0 for extraction. A call that exceeds its time budget is cancelled and the rules result stands.
-- The context window covers the chat; a long chat is split into windows of messages.
+- The context window covers the chat (about 2,000 tokens in the engine, roughly 40 to 60 short messages); a longer chat must be split into windows of messages.
 - Model weights are never committed.
 
 ## 9. Logging
@@ -218,7 +219,7 @@ The rest of this section is the earlier plan.
 | Recommendation (three tones), recap text, open points: fixed templates, no model text (`docs/RECAP_DESIGN.md`) | Built, tested |
 | Echo code | Built (web side, `echo-code.ts`) |
 | Injection: a message that tells the AI what to do makes its terms needs_review | Built (one pattern set, tested). The wider fixture set is not built |
-| Local model | Stub. No model is chosen or pinned |
+| Local model in the application | Stub. A model is chosen for the offline engine (Qwen3-0.6B fine-tuned, ADR-043, section 14) but is not pinned in `models/manifest.json` and is not connected to the application |
 
 ## 12. What the AI must not do
 
@@ -230,3 +231,70 @@ Write to the vault; confirm a term; send a message; write recap text; give legal
 - Sarcasm, haggling back and forth and quoted messages can mislead rules and models. Human confirmation is the control.
 - A term the model and the rules both miss shows as **missing** even though the chat states it. The user can add it, and the status wording says "no message states this" and not "this was not agreed".
 - Voice notes in noisy rooms transcribe badly. Low-confidence segments are marked.
+
+## 14. The offline engine: model, data and measured results
+
+This section describes the separate offline engine (`PROJECT_REPORT.md`, ADR-042). The engine is **not connected** to the application; the application still runs on recorded output. Every figure below is the team's own measurement on **36 held-out, realistic, synthetic WhatsApp-style chats**, run 25 to 26 October 2026. It is a target, not a result, until it is measured on real Indian chats. Nothing here describes this repository's recorded demo.
+
+### 14.1 Model and training
+
+| Item | Detail |
+|---|---|
+| Base | Qwen3-0.6B (606.1M parameters, Apache 2.0) |
+| Method | LoRA on q, k, v, o, gate, up, down; rank 16, alpha 32, dropout 0.05; 10,092,544 trainable (1.67%) |
+| Run (v4) | 1 epoch, 405 steps, learning rate 2e-4 cosine, 3% warm-up, batch 2 x 8 accumulation, fp16, max 2,048 tokens, one Kaggle T4, 54 min, seed 20261025 |
+| Loss | Validation loss 0.0061 to 0.0004 (measures the answer format too; not an accuracy figure) |
+| Loss masking | Prompt tokens are masked; the training prompt equals the run-time prompt |
+| Export | Merged, GGUF, Q8_0 (`veridoc-small-v4-Q8_0.gguf`), llama.cpp b11869 |
+
+### 14.2 Training data (6,480 chats)
+
+| Source | Chats | Kind |
+|---|---|---|
+| Template chats (English, Hinglish, Kannada-English) | 3,000 | Synthetic |
+| Realistic WhatsApp-style exports | 480 | Synthetic |
+| Negotiation chats (offer versus agreed price, no agreement, units) | 1,500 | Synthetic |
+| CraigslistBargains, converted | 1,500 | Real, US English, licence unknown (ADR-046) |
+
+Held out: 36 realistic, 150 negotiation, 100 CraigslistBargains and 150 validation chats. 236 training chats carry injected instructions the model learns to ignore. Scripts are Latin only; Devanagari and Kannada script are not trained.
+
+### 14.3 Two layers that check the model
+
+| Layer | Where | What it does |
+|---|---|---|
+| Engine rules | Engine | Re-checks each term against its quoted message; auto-repairs only what the quote proves; flags the rest; lists missing terms. An unconfirmed, conditional or approximate offer is never made an agreed value |
+| Application grounding | This repository (sections 5 to 7) | Verbatim quote check, value-versus-quote check, rule flags, human confirmation. This is the check that counts for rule 7 and still applies to any model output the application receives |
+
+### 14.4 Benchmark (same 36 chats, strict = exact match, lenient = word overlap F1 of at least 0.5)
+
+| Model | Terms correct (strict / lenient) | Valid JSON | Deal type | Fully correct chats (strict / lenient) |
+|---|---|---|---|---|
+| **v4 + rules (shipped)**: pendrive, Q8_0, JSON constraint | **72.0% / 78.0%** | 100% | 91.7% | 2.8% / 16.7% |
+| v3 + rules | 56.1% / 60.6% | 100% | 75.0% | 5.6% / 11.1% |
+| v3, pendrive | 54.2% / 58.7% | 100% | 75.0% | 5.6% / 8.3% |
+| v3, MLX, no constraint | 47.9% / 52.1% | 88.9% | 66.7% | 2.8% / 5.6% |
+| v2, recorded in manifest | 35.2% / 38.4% | 100% | 69.4% | 0.0% |
+
+Quick checks on other sets (v4, Kaggle, 12 chats each, no constraint, no rules): realistic 81.0%, negotiation 100%, CraigslistBargains 100%. These are not comparable with the table. Speed: about 2 s per chat on a MacBook M4. macOS tested; Windows and Linux packaged, untested.
+
+### 14.5 Rules audit (v3 on the pendrive, 378 terms)
+
+| Measure | Value |
+|---|---|
+| Right with no review needed | 57.4% |
+| Model errors before the rules | 39.4% |
+| Errors caught and sent to review | 71.8% |
+| Errors not flagged | 11.1% |
+| Correct terms wrongly flagged | 3.2% |
+| Terms sent to a person | 31.5% |
+| Terms changed by auto-repair | 9 (8 became correct) |
+
+Auto-repair run on 5,406 chats with known answers changed none of the correct ones.
+
+### 14.6 Known failures of the engine
+
+Missed totals stated in the chat; a casual chat with no deal read as a deal; unsupported types (rent, catering) forced into supply order or freelance; a negotiated price lost to the first offer; advance confused with total; a contradiction on one price-conflict test chat not flagged (needs a human check). Only 2.8% of chats are fully correct, so a person must confirm every term.
+
+### 14.7 What is not claimed
+
+No accuracy figure for real Indian chats, no figure for the application's recorded demo, no speed figure for Windows or Linux, and no claim that the engine is integrated.

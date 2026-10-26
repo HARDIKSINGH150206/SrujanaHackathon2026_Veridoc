@@ -8,10 +8,10 @@ Status markers: **built** runs in this repository today; **planned** does not ex
 
 | Part | Where | Does | Status |
 |---|---|---|---|
-| Web app | `apps/web` | Screens, REST API, sign-in, hash re-verification, hash chain, anchoring, audit log | built (wording still old) |
+| Web app | `apps/web` | Screens, REST API, sign-in, hash re-verification, hash chain, anchoring, audit log | built |
 | Crypto core | `packages/crypto-core` | PDF page to PNG, tiles, salted Merkle tree. Shared by the browser, the server and the verify page | built |
-| Chat record builder | `apps/web` | Turns the imported chat into a PDF in the browser so the normal upload can hash it (ADR-040, accepted) | planned |
-| AI service | `apps/ai-service` | Redaction tile suggestions, chat import, term extraction and flags (built). Recommendation and recap text (planned) | partly built |
+| Chat record builder | `apps/web/src/lib/chat-record.ts` | Turns the imported chat into a PDF in the browser so the normal upload can hash it (ADR-040, accepted) | built |
+| AI service | `apps/ai-service` | Redaction tile suggestions, chat import, term extraction, flags, recommendation and recap text from fixed templates | built |
 | Model adapter | `apps/ai-service/app/model_adapter.py` | One interface, `extract(numbered_chat, playbook_id)`, returning terms with `status`, `value`, `quote[]`, `msg[]` and `reason`; fake or local behind it | built; local is a stub |
 | Vault storage | PostgreSQL (Prisma), MinIO | Versions, tiles, hash chain, audit log, page PNGs, anchor records | built |
 | Anchor | Polygon Amoy, `EvidenceAnchorV2.sol` | Public, append-only record of each version's commitment | built |
@@ -107,3 +107,50 @@ The only arrow out of the AI boundary goes to the review screen. Nothing from th
 - The 20×20 grid, PNG-only pages, the proof format (`docs/03`).
 - The public, stateless verify page (`CLAUDE.md` rule 5).
 - Dual anchoring of every version (`CLAUDE.md` rule 3).
+
+## 7. The offline engine (separate component)
+
+The team also built an offline engine that analyses a chat on the user's own laptop from a pendrive (`PROJECT_REPORT.md`, ADR-042, ADR-045). It is a separate codebase, **not in this repository and not connected to it**. The application runs on recorded output until `LocalModelAdapter` is implemented. Everything in this section describes the engine, not the vault.
+
+### 7.1 Pipeline
+
+```mermaid
+flowchart LR
+  A[Chat in: export, paste or live typing] --> B[Parser: wa_parse.py]
+  B --> C[Deal classifier and playbook]
+  C --> D[llama-server: Qwen3-0.6B Q8_0, JSON grammar]
+  D --> E[Rules engine: re-check and auto-repair]
+  E --> F[Deal sheet: terms, quotes, flags, missing]
+  F -. planned .-> G[Receipt: local SQLite]
+```
+
+### 7.2 Components
+
+| Component | File | Role |
+|---|---|---|
+| Launchers | `Start VeriDoc.command`, `Start VeriDoc.bat`, `start-veridoc.sh` | Pick the bundled Python for the OS and start the engine |
+| Engine selector | `app/engine_path.py` | Metal on Apple Silicon; Vulkan if the driver exists; otherwise CPU. `VERIDOC_CPU_ONLY` forces CPU |
+| Parser | `app/wa_parse.py` | Numbered messages with sender names from exports and pasted text |
+| Playbooks | `config/playbooks/` | Deal type, roles, required terms |
+| Model | `llama-server` + `veridoc-small-v4-Q8_0.gguf` | Terms as schema-checked JSON: value, quote, message number, status |
+| Rules engine | `app/` | Checks each term against its quote; repairs or flags; lists missing terms |
+| API | `app/veridoc_serve.py` | HTTP on `127.0.0.1:8765` |
+| Terminal tools | `app/veridoc_extract.py`, `app/veridoc_live.py` | One-shot analysis; live two-person chat with a watching deal sheet |
+| Model registry | `config/models.json` | Tiers 0.6B, 1.7B, 4B; the first installed one is used |
+
+### 7.3 API
+
+| Method and path | Request | Response |
+|---|---|---|
+| `GET /api/health` | none | Status and active model |
+| `POST /api/analyse` | JSON: `text` (required), `me`, `deal_type` (optional) | Deal type; each term with value, quote, message number, status; missing terms |
+
+The server binds to `127.0.0.1` only and refuses other hosts and other web origins, so a web page cannot read the user's chats through it.
+
+### 7.4 State
+
+The engine has no database and keeps nothing between requests; configuration is plain files on the drive. A local SQLite receipt is planned for the engine. The application's vault (section 1) is the part that stores, chains and anchors records today.
+
+### 7.5 Intended integration
+
+`LocalModelAdapter` would call the engine (or an equivalent `llama-server`) and return the adapter's term format. The application's own grounding check, human confirmation and the AI boundary (section 4) would apply unchanged to that output: the engine's rules are an extra layer, not a replacement. This is not built, and no hash, proof format, audit format or migration changes with it.

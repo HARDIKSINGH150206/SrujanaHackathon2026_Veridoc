@@ -4,8 +4,8 @@
 |---|---|
 | **Product** | VeriDoc: a verified plain-language recap and a tamper-evident receipt for informal agreements |
 | **Problem** | LS-06, *From Handshake to Contract* (informal agreements between two people), Srujana Hackathon |
-| **Status** | Hackathon build in progress. The hash-based evidence vault is inherited and working; the chat features are mostly not built yet (section 8) |
-| **Related** | `ARCHITECTURE.md`, `TECH_STACK.md`, `AI_SPEC.md`, `TRIM_PLAN.md`, `DECISIONS.md`, `DEMO_RUNBOOK.md`, `PRIOR_WORK.md` |
+| **Status** | Hackathon build. The evidence vault (inherited) and the chat features (import, terms, flags, recap, echo code, chat record, voice notes on recorded transcripts) are built and run on recorded model output. A separate offline engine with a fine-tuned model exists but is not connected (sections 12 and 8) |
+| **Related** | `ARCHITECTURE.md`, `TECH_STACK.md`, `AI_SPEC.md`, `TRIM_PLAN.md`, `DECISIONS.md`, `DEMO_RUNBOOK.md`, `PRIOR_WORK.md`, `PROJECT_REPORT.md` (the full product report) |
 
 VeriDoc is a drafting and record-keeping aid. It is not legal advice and does not predict how any dispute would be decided.
 
@@ -183,7 +183,8 @@ Status as of this document. "Real" means it runs in this repository today. The d
 | Recap in English and Hindi (fixed templates, confirmed terms only), open points, three-tone suggested messages | Real, tested. Saved through the normal upload, checked in a browser | Hindi wording is a draft, not reviewed by a native speaker |
 | Echo code and reply check | Real, tested (vectors pinned against an independent implementation) | The code does not show who sent a reply |
 | Voice notes in an export folder: numbered with spans, audio SHA-256, "from voice note" sources, play the moment, text-versus-voice contradiction, chat record saved with the audio fingerprint | Real, tested, checked in a browser | **Demo.** Transcripts are recorded, not speech recognition (the badge says "recorded transcript"). The synthetic sample voice is ffmpeg flite text-to-speech. The local transcriber (faster-whisper) is a stub. The audio is not stored in the vault, only its SHA-256 |
-| Chat saved to the vault | | Not built (design in `ARCHITECTURE.md`, ADR-040 accepted) |
+| Chat saved to the vault as an ordinary PDF through the normal upload (ADR-040) | Real: chat record and recap are saved this way | Saving the pasted reply as a further version is not built; scanned PDFs are not supported |
+| Offline engine: fine-tuned Qwen3-0.6B, rules engine, terminal tools, local API, pendrive packaging | Real, in a **separate codebase** (`PROJECT_REPORT.md`). Run on macOS (Apple Silicon) | **Not in this repository and not connected** to the app. Windows and Linux packaged, untested. Its figures are the team's own measurements on synthetic chats (section 12.3) |
 
 ## 9. Non-functional requirements
 
@@ -205,6 +206,103 @@ Status as of this document. "Real" means it runs in this repository today. The d
 
 ## 11. Open questions
 
-- Which local model to pin in `models/manifest.json`, and on what hardware it must run (`TECH_STACK.md` section 3).
+- The v4 model is chosen for the engine (ADR-043). Its SHA-256 is not yet pinned in `models/manifest.json`, and `LocalModelAdapter` is not implemented (`TECH_STACK.md` section 3).
 - The individual organiser's name and the written confirmation of the reuse (`PRIOR_WORK.md`).
-- Whether the `quote` field is added to the adapter and the recordings before the term extractor is built (`AI_SPEC.md` section 11).
+- Will the engine's code be added to this repository, or called as a separate local service?
+- Accuracy on real Indian chats is unmeasured. Who supplies consented real chats, and when?
+- Team name, exact LS-06 wording, team roles and which work falls inside the hackathon window are **[to confirm]** (`PROJECT_REPORT.md`).
+- CraigslistBargains licence: retrain without it, or obtain permission, before any commercial release (ADR-046).
+
+---
+
+## 12. The offline engine and the report figures
+
+VeriDoc has two components (ADR-042). The application and evidence vault are this repository. The offline engine is a separate codebase on a pendrive: a small model fine-tuned by the team, a rules engine, terminal tools and a local API that analyse a chat on the user's own laptop with no internet. It is not integrated with the application; the planned connection is `LocalModelAdapter`. Full detail is in `PROJECT_REPORT.md`; architecture is in `ARCHITECTURE.md` section 7.
+
+### 12.1 Why offline
+
+Business chats hold prices, names and phone numbers, and many small traders work on weak networks. Pasting a chat into a cloud chatbot shares it with a third party. The engine uses no account, API key, upload or cloud service, and costs nothing per chat.
+
+### 12.2 Engine requirements
+
+| ID | Requirement | State |
+|---|---|---|
+| E1 | Read WhatsApp exports (Android and iOS), pasted text and live typed messages | Built, macOS tested |
+| E2 | Return terms with value, quoted words, message number and status (stated, unclear, contradicted, missing) | Built |
+| E3 | Re-check every term against its quote; auto-repair only what the quote proves | Built |
+| E4 | List required terms never mentioned, per deal type (supply order, freelance) | Built |
+| E5 | Run with no internet, nothing to install, from an exFAT pendrive on macOS, Windows and Linux | macOS tested; Windows and Linux packaged, untested |
+| E6 | Local API on `127.0.0.1:8765`, same laptop only | Built |
+| E7 | Local receipt (hash and version chain in SQLite), suggested reply, recap, encrypted vault | Planned. The application already provides receipt, reply and recap |
+
+### 12.3 Measured results (engine only, with caveats)
+
+Own runs on 36 held-out realistic, **synthetic** WhatsApp-style chats, 25 to 26 October 2026. A target until measured on real Indian chats.
+
+| Figure | Value |
+|---|---|
+| Terms correct (strict / lenient) | 72.0% / 78.0% |
+| Valid JSON | 100% (88.9% without the grammar constraint) |
+| Deal type correct | 91.7% |
+| Chats fully correct (strict / lenient) | 2.8% / 16.7% |
+| Model errors caught by the rules | 71.8% (v3 audit, 378 terms) |
+| Speed | About 2 s per chat, MacBook M4 |
+| Progress across versions (strict) | v2 35.2%, v3 54.2%, v3 + rules 56.1%, v4 + rules 72.0% |
+
+These are not figures for this repository's recorded demo. Only 2.8% of chats are fully correct, so VeriDoc is a checker that shows what to confirm, not a system that reads chats perfectly. Known failures: missed totals, casual chat read as a deal, unsupported deal types forced into one of two, negotiated price lost to the first offer, advance and total confused.
+
+## 13. Target users and market
+
+| User | Typical chat deal | What usually goes unsaid |
+|---|---|---|
+| Small suppliers and shops | 200 shirts at 480, 50% advance | Delivery date, balance due date |
+| Freelancers | A 8,000 logo with "a few changes" | Revisions, deadline |
+| Tutors and coaches | 3,000 a month from June | Fee due date, notice period |
+| Contractors and landlords | "Around 45k" paint job; rent deposit | Exact price, start date, refund terms |
+| Caterers and event vendors | 40 plates at 420, 5,000 advance | Final headcount, balance date |
+
+Context (sources in `PROJECT_REPORT.md` section 2): MSME delayed payments of 7.34 lakh crore (GAME-FISME, March 2024); about 1 in 4 payment claims rejected by MSE councils (Lok Sabha AU2328); about 535 million WhatsApp users in India (Meta, Statista); 80% of small-business owners in India and Brazil use WhatsApp for business (Meta); 61% of surveyed Indian freelancers unpaid at least once (PayPal, 2018).
+
+**Legal position, as researched by the team. A lawyer must confirm it before anyone relies on it.** Indian Contract Act s.10 needs no writing; IT Act s.10A says an electronic contract is not invalid for being electronic; a chat printout needs a certificate under Bharatiya Sakshya Adhiniyam s.61 to 63; MSMED Act s.15 to 16 late-payment interest runs from the agreed date. VeriDoc does not produce a BSA s.63 certificate; the integrity record is a draft.
+
+## 14. Differentiation
+
+| Capability | AI chatbot | Contract or e-sign app | VeriDoc |
+|---|---|---|---|
+| Works with no internet | No | No | Engine: yes. Application: import and recap yes; anchoring and the on-chain check need a Polygon RPC |
+| Chat data stays on the device | No | No | Engine: yes |
+| Each term linked to its source message | No | No | Yes |
+| Flags missing and vague terms during the chat | If asked | No | Yes |
+| No contract or signature needed | Yes | No | Yes |
+| Tamper-evident record | No | Online audit trail | Yes in the application (hash chain, public anchor) |
+
+Comparable products (public websites, October 2026): Pakka AI, Chat2Contract, ThreadRecap, ProofSnap, Defellix, Riffit. They are cloud-led, ask for a signature, or only seal an export; none reads the terms offline. This is the team's reading of their public pages, not a test of the products.
+
+## 15. Viability, business model and risks
+
+- **Business model (proposed, not validated):** free offline version for individuals; a paid team version with encrypted sync and shared history; an optional paid expert review by a CA or lawyer. Pricing after user validation.
+- **Feasibility:** model file under 1 GB, ordinary laptop CPU, standard-library Python, bundled runtimes.
+- **Scalability:** each laptop runs its own copy; copying the drive is distribution. New deal types need a playbook and data, not infrastructure.
+- **Security and privacy:** no network at run time; localhost-only API; no accounts or keys in the engine. A lost pendrive exposes chats saved on it; an encrypted vault is future work.
+
+| Risk | Mitigation |
+|---|---|
+| A wrong term is relied on | Every term shows its quote; rules flag 71.8% of model errors in the audit; a person confirms each term |
+| Read as legal advice | Stated everywhere: drafting and record-keeping aid, not legal advice; no verdict prediction |
+| Fake or edited chats | Cannot be detected. The record shows it is unchanged after saving, not that the chat was genuine |
+| Unsigned binaries blocked by macOS or Windows | Launcher clears the macOS quarantine flag; Windows shows a one-time "Run anyway" |
+| Training-data licence | CraigslistBargains licence unknown; retrain or get permission before commercial release |
+| Accuracy figure is on synthetic chats | Labelled as a target; validate on real chats before any claim |
+
+## 16. Future scope and deployment needs
+
+1. Connect the engine to the application through `LocalModelAdapter`, pin the model hash, and keep the application's grounding check in place.
+2. Engine receipt (local SQLite) and offline verification.
+3. Hindi and Kannada recap with native-speaker review; on-device speech to text including Hindi.
+4. Test and fix Windows and Linux on real machines.
+5. More deal types and a "not a deal" class (rent, catering, services).
+6. Encrypted vault for chats saved on the drive.
+7. Real Indian chat data (with consent) and a measured accuracy figure; more training on negotiated prices, advance versus total and casual Hinglish; try the 1.7B tier.
+8. For deployment: signed binaries, user validation with about 20 traders, tutors and freelancers (success: most would send the recap unchanged), targets of 85%+ term extraction and 90%+ missing-term recall on real chats, a privacy notice, legal review of how the record is presented, and distribution through trade associations, MSME facilitation centres, legal-aid clinics and freelancer communities.
+
+The Evidence Strength score and the dispute pack remain not planned.
