@@ -167,7 +167,7 @@ VeriDoc is built on **DigiVault**, our earlier project, written before the hacka
 - redaction suggestions and tiles
 - share links
 - the insert-only, hash-chained audit trail
-- the certificate PDF (still carries its original wording; `docs/TRIM_PLAN.md` step 6 replaces it)
+- the PDF builder behind the integrity record (reworded: it is now a draft integrity record, not a legal certificate)
 
 **Built during the event** (`git log --oneline e3a0496..main`: 40 commits; `git diff --stat`: 131 files changed):
 - chat and voice-note import (`chat_import.py`, `transcriber.py`, recorded transcripts) and the synthetic samples

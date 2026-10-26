@@ -33,11 +33,10 @@ function chainConfigFor(contractAddress: string | null): ChainConfig | null {
 /**
  * GET /api/v1/documents/{documentId}/versions/{versionId}/certificate
  *
- * BSA s.63 certificate (docs/04 §5, docs/07 Phase 5; lib/certificate.ts).
- * docs/01: software cannot self-certify evidence, so this is only ever a
- * PRE-FILLED, unsigned certificate with blank signature blocks for the
- * officer and the expert. Once the version is anchored it carries a QR to
- * the chain-only check on /verify (ADR-022).
+ * Draft integrity record (docs/04 §5, docs/07 Phase 5; lib/certificate.ts). The route
+ * keeps its old name and its audit actions. The PDF is pre-filled and unsigned, says on
+ * every page that it is not a legal certificate, and claims no statutory effect. Once
+ * the version is anchored it carries a QR to the chain-only check on /verify (ADR-022).
  */
 export async function GET(
   req: Request,
@@ -118,7 +117,7 @@ export async function GET(
   return new Response(Buffer.from(bytes), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="bsa-certificate-${version.document.title.replace(/[^a-z0-9]+/gi, "-")}-v${version.versionNo}.pdf"`,
+      "Content-Disposition": `attachment; filename="integrity-record-draft-${version.document.title.replace(/[^a-z0-9]+/gi, "-")}-v${version.versionNo}.pdf"`,
     },
   });
 }

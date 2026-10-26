@@ -55,6 +55,38 @@ class TemplateFileTests(unittest.TestCase):
                 self.assertNotRegex(tones["firm"], banned)
 
 
+DRAFT_NOTICE = "Draft translation. Not reviewed by a native speaker."
+
+
+class HindiDraftLabelTests(unittest.TestCase):
+    def test_every_hindi_template_set_carries_the_draft_notice(self):
+        for pb in (SUPPLY, FREELANCE):
+            data = json.loads((TEMPLATES / f"{pb.id}.json").read_text(encoding="utf-8"))
+            self.assertEqual(data["languages"]["hi"]["draft_notice"], DRAFT_NOTICE, pb.id)
+
+    def test_english_has_no_draft_notice(self):
+        for pb in (SUPPLY, FREELANCE):
+            data = json.loads((TEMPLATES / f"{pb.id}.json").read_text(encoding="utf-8"))
+            self.assertNotIn("draft_notice", data["languages"]["en"])
+
+    def test_the_hindi_recap_result_says_it_is_a_draft_translation(self):
+        r = build_recap(SUPPLY, "hi", full_supply(), "Dev")
+        self.assertEqual(r["draft_notice"], DRAFT_NOTICE)
+
+    def test_the_english_recap_result_has_none(self):
+        self.assertIsNone(build_recap(SUPPLY, "en", full_supply(), "Dev")["draft_notice"])
+
+    def test_the_notice_is_not_mixed_into_the_recap_text_or_the_templates_lines(self):
+        r = build_recap(SUPPLY, "hi", full_supply(), "Dev")
+        self.assertNotIn("Draft translation", r["text"])
+        self.assertNotIn("Draft translation", json.dumps(r["suggestions"], ensure_ascii=False))
+
+    def test_the_hindi_template_wording_is_unchanged_by_the_label(self):
+        r = build_recap(SUPPLY, "hi", full_supply(), "Dev")
+        self.assertIn("डिलीवरी 20 मार्च 2026 तक", r["text"])
+        self.assertIn("कुल राशि: ₹9,000", r["text"])
+
+
 class FormatValueTests(unittest.TestCase):
     def test_indian_grouping(self):
         for n, want in ((0, "0"), (45, "45"), (999, "999"), (1000, "1,000"), (9000, "9,000"), (100000, "1,00,000"), (12345678, "1,23,45,678")):

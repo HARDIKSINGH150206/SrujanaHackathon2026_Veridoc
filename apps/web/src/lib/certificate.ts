@@ -1,11 +1,12 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import QRCode from "qrcode";
-import { CERTIFICATE_QR_STATEMENT } from "./certificate-text";
+import { CERTIFICATE_DRAFT_LINE, CERTIFICATE_LIMITS, CERTIFICATE_QR_STATEMENT } from "./certificate-text";
 
 /**
- * BSA s.63 certificate PDF (docs/07 Phase 5). Pre-filled and unsigned:
- * software never self-certifies (docs/01), so it carries blank signature
- * blocks for the officer (Part A) and the expert (Part B).
+ * Draft integrity record PDF (docs/07 Phase 5). Pre-filled and unsigned. It is
+ * tamper-evident and nothing more: every page says it is a draft and not a legal
+ * certificate, and it carries blank blocks for a reviewer and for the lawyer who
+ * checks it. It does not claim to satisfy any statute.
  *
  * The QR opens the public, chain-only check (ADR-022: lib/public-proof.ts
  * publicVerifyUrl). It is only drawn once the version is anchored.
@@ -129,11 +130,20 @@ class Writer {
   }
 }
 
-/** The pre-filled, unsigned certificate as PDF bytes. */
+/** The draft line, at the top and the foot of a page. Called for every page the document has. */
+function drawDraftLine(page: PDFPage, bold: PDFFont): void {
+  const size = 8.5;
+  const text = encodable(bold, CERTIFICATE_DRAFT_LINE);
+  const x = (page.getWidth() - bold.widthOfTextAtSize(text, size)) / 2;
+  page.drawText(text, { x, y: page.getHeight() - 30, size, font: bold, color: rgb(0.55, 0.1, 0.1) });
+  page.drawText(text, { x, y: 24, size, font: bold, color: rgb(0.55, 0.1, 0.1) });
+}
+
+/** The pre-filled, unsigned draft integrity record as PDF bytes. */
 export async function buildCertificatePdf(input: CertificateInput): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
-  pdf.setTitle(`BSA s.63 certificate: ${input.caseNumber} v${input.versionNo}`);
-  pdf.setProducer("DigiVault");
+  pdf.setTitle(`Draft integrity record: ${input.caseNumber} v${input.versionNo}`);
+  pdf.setProducer("VeriDoc");
   const page = pdf.addPage(A4);
   const w = new Writer(
     page,
@@ -142,11 +152,11 @@ export async function buildCertificatePdf(input: CertificateInput): Promise<Uint
     await pdf.embedFont(StandardFonts.Courier)
   );
 
-  w.text("BHARATIYA SAKSHYA ADHINIYAM, 2023: SECTION 63 CERTIFICATE", { size: 14, font: w.bold });
-  w.text("Pre-filled by DigiVault. Not valid until signed in Part A and Part B below.", { size: 9.5, color: MUTED });
+  w.text("DRAFT INTEGRITY RECORD", { size: 14, font: w.bold });
+  w.text("Pre-filled by VeriDoc. It is tamper-evident. It is not a legal certificate.", { size: 9.5, color: MUTED });
 
   w.heading("Electronic record");
-  w.field("Case reference", input.caseNumber);
+  w.field("Agreement reference", input.caseNumber);
   w.field("Document title", input.documentTitle);
   w.field("Version", `v${input.versionNo} · ${input.gridSize} x ${input.gridSize} tile grid`);
   if (input.proofVersion === 1) {
@@ -169,7 +179,7 @@ export async function buildCertificatePdf(input: CertificateInput): Promise<Uint
     w.field("Anchor contract", a.contractAddress, { hash: true });
     w.field("MinIO Object Lock", a.objectLockUri, { hash: true });
   } else {
-    w.text("This version is not anchored yet. Generate the certificate again once it is anchored to get the verification QR code.", { color: MUTED });
+    w.text("This version is not anchored yet. Generate this record again once it is anchored to get the verification QR code.", { color: MUTED });
   }
   w.field("Generated", `${input.generatedAt.toISOString()} for ${input.generatedForRole}`);
 
@@ -187,18 +197,13 @@ export async function buildCertificatePdf(input: CertificateInput): Promise<Uint
     w.y = Math.min(w.y, top - size) - 10;
   }
 
-  w.heading("Declaration");
-  w.text(
-    "Section 63 of the Bharatiya Sakshya Adhiniyam, 2023 requires a certificate for electronic evidence signed by the person in charge " +
-      "of the computer or communication device (Part A) and by an expert (Part B). Software cannot self-certify evidence: this " +
-      "document has no legal effect until both have reviewed the record above and signed.",
-    { size: 9 }
-  );
+  w.heading("What this record is");
+  w.text(CERTIFICATE_LIMITS, { size: 9 });
 
   w.y -= 26;
   const colWidth = (w.right - LEFT - 30) / 2;
   const top = w.y;
-  for (const [i, title] of ["Part A: officer in charge of the record", "Part B: expert"].entries()) {
+  for (const [i, title] of ["Reviewed by", "Checked by a lawyer (before any legal use)"].entries()) {
     const x = LEFT + i * (colWidth + 30);
     w.y = top;
     page.drawText(title, { x, y: w.y, size: 9.5, font: w.bold, color: INK });
@@ -212,6 +217,8 @@ export async function buildCertificatePdf(input: CertificateInput): Promise<Uint
       page.drawLine({ start: { x: x + 70, y: w.y - 2 }, end: { x: x + colWidth, y: w.y - 2 }, thickness: 0.5, color: MUTED });
     }
   }
+
+  for (const p of pdf.getPages()) drawDraftLine(p, w.bold);
 
   return pdf.save();
 }

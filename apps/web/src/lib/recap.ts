@@ -35,6 +35,13 @@ export interface RecapResponse {
   suggestions: { key: string; label: string; status: string; messages: { friendly: string; neutral: string; firm: string } }[];
   reply_line: string;
   disclaimer: string;
+  /** Set for Hindi: the templates are not reviewed by a native speaker. Shown on screen and kept in the saved record. */
+  draft_notice: string | null;
+}
+
+/** The line at the foot of the saved recap PDF: the disclaimer, plus the draft-translation notice for Hindi. */
+export function recapPdfDisclaimer(r: Pick<RecapResponse, "disclaimer" | "draft_notice">): string {
+  return r.draft_notice ? `${r.disclaimer} ${r.draft_notice}` : r.disclaimer;
 }
 
 export type RecapResult = { status: number; body: RecapResponse | { error: string; message: string } };

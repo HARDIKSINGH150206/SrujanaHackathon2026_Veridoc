@@ -188,7 +188,8 @@
           "neutral": "{label} के लिए मेरे पास \"{quote}\" है। कृपया पक्का करें कि यह सही है।",
           "firm": "{label} के लिए मेरे पास \"{quote}\" है। कृपया इसे पक्का करें ताकि हम इसे दर्ज कर सकें।"
         }
-      }
+      },
+      "draft_notice": "Draft translation. Not reviewed by a native speaker."
     }
   }
 }
