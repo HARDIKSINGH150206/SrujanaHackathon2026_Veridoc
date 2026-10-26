@@ -186,17 +186,17 @@ async function checkCertificate(params: CertificateParams, rpcUrl: string): Prom
   try {
     // The tx named on the certificate tells us which official contract to read.
     const receipt = await provider.getTransactionReceipt(params.txHash);
-    if (!receipt || receipt.status !== 1) return { outcome: "mismatch", reason: "The transaction on the certificate was not found or failed." };
+    if (!receipt || receipt.status !== 1) return { outcome: "mismatch", reason: "The transaction on the record was not found or failed." };
     const official = officialContract(receipt.to);
     if (!official) {
-      return { outcome: "untrusted", reason: "Invalid — the certificate's transaction was not sent to a VeriDoc anchor contract.", detail: `to=${receipt.to}` };
+      return { outcome: "untrusted", reason: "Invalid — the record's transaction was not sent to a VeriDoc anchor contract.", detail: `to=${receipt.to}` };
     }
 
     const anchor = await readOfficialAnchor(provider, official, params.versionId);
     if (!anchor.found) return { outcome: "mismatch", reason: "No anchor found on-chain for this document version." };
     if (!anchor.trusted) return { outcome: "untrusted", reason: anchor.reason, detail: `anchoredBy=${anchor.anchoredBy}` };
     if (anchor.value !== params.commitment) {
-      return { outcome: "mismatch", reason: "The certificate's commitment does not match the public blockchain record.", detail: `certificate=${params.commitment} on_chain=${anchor.value}` };
+      return { outcome: "mismatch", reason: "The record's commitment does not match the public blockchain record.", detail: `certificate=${params.commitment} on_chain=${anchor.value}` };
     }
 
     // The tx must be the one that wrote this anchor.
@@ -211,7 +211,7 @@ async function checkCertificate(params: CertificateParams, rpcUrl: string): Prom
         String(parsed.args[official.event.value]).replace(/^0x/, "").toLowerCase() === params.commitment
       );
     });
-    if (!wroteThisAnchor) return { outcome: "mismatch", reason: "The certificate's transaction did not write this anchor." };
+    if (!wroteThisAnchor) return { outcome: "mismatch", reason: "The record's transaction did not write this anchor." };
 
     return { outcome: "anchored", anchoredAt: new Date(anchor.timestamp * 1000).toISOString(), blockNumber: receipt.blockNumber, contract: official.label };
   } finally {
@@ -454,7 +454,7 @@ export default function VerifyPage() {
     if (certParams && ![proof.redacted.versionId, proof.original.versionId].includes(certParams.versionId)) {
       setResult({
         outcome: "mismatch",
-        reason: "This redaction proof is for a different document version than the certificate link.",
+        reason: "This redaction proof is for a different document version than the record link.",
         detail: `link=${certParams.versionId} proof=${proof.redacted.versionId}`,
       });
       return;
@@ -520,7 +520,7 @@ export default function VerifyPage() {
       if (certParams && certParams.versionId !== proof.document_version_id) {
         setResult({
           outcome: "mismatch",
-          reason: "This proof file is for a different document version than the certificate link.",
+          reason: "This proof file is for a different document version than the record link.",
           detail: `link=${certParams.versionId} proof=${proof.document_version_id}`,
         });
         return;
@@ -661,14 +661,14 @@ export default function VerifyPage() {
             {certResult.outcome === "checking" && (
               <div className="vf-result-row">
                 <span className="vf-spinner" aria-hidden="true" />
-                <strong>Checking the certificate against the blockchain record...</strong>
+                <strong>Checking the record against the blockchain record...</strong>
               </div>
             )}
             {certResult.outcome === "anchored" && (
               <>
-                <h2>Anchored: this certificate&apos;s commitment is on the public blockchain</h2>
+                <h2>Anchored: this record&apos;s commitment is on the public blockchain</h2>
                 <p style={{ color: "var(--paper)" }}>
-                  The commitment and transaction on this certificate match the VeriDoc anchor record. No document file has been
+                  The commitment and transaction on this record match the VeriDoc anchor record. No document file has been
                   checked yet: add the page images and proof file below to verify the document itself.
                 </p>
                 <p className="vf-detail">{CERTIFICATE_QR_STATEMENT}</p>
@@ -689,7 +689,7 @@ export default function VerifyPage() {
             )}
             {(certResult.outcome === "untrusted" || certResult.outcome === "mismatch") && (
               <>
-                <h2>{certResult.outcome === "untrusted" ? certResult.reason : "Certificate does not match the blockchain record"}</h2>
+                <h2>{certResult.outcome === "untrusted" ? certResult.reason : "Record does not match the blockchain record"}</h2>
                 {certResult.outcome === "mismatch" && <p style={{ color: "var(--paper)" }}>{certResult.reason}</p>}
                 {certResult.detail && <p className="vf-detail">{certResult.detail}</p>}
               </>
@@ -749,7 +749,7 @@ export default function VerifyPage() {
                 <h2>Verified - matches public blockchain record</h2>
                 <p style={{ color: "var(--paper)" }}>
                   The supplied document pages match the public Polygon Amoy anchor.
-                  {certParams && certResult?.outcome === "anchored" && " They are the document version the scanned certificate describes."}
+                  {certParams && certResult?.outcome === "anchored" && " They are the document version the scanned record describes."}
                 </p>
               </div>
             </div>

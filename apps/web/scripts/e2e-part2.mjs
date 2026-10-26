@@ -56,7 +56,7 @@ async function main() {
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.click('button:has-text("Download certificate")').then(() => stepUpWithBiometric()(page)),
+    page.click('button:has-text("Download draft integrity record")').then(() => stepUpWithBiometric()(page)),
   ]);
   const certPath = await download.path();
   console.log("STEP: certificate downloaded (biometric step-up) ->", certPath);

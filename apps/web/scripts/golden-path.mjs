@@ -201,7 +201,7 @@ async function main() {
     await step("5 Downloads: bundle, redaction proof, certificate (step-up)", 45, async () => {
       bundle = await saveDownloads(page, 'button:has-text("Download verification bundle")', 2);
       [redactionProof] = await saveDownloads(page, 'button:has-text("Download redaction proof")', 1);
-      [certPdf] = await saveDownloads(page, 'button:has-text("Download certificate")', 1, (p) => stepUpWithPin(IO.pin)(p));
+      [certPdf] = await saveDownloads(page, 'button:has-text("Download draft integrity record")', 1, (p) => stepUpWithPin(IO.pin)(p));
       return [...bundle, redactionProof, certPdf].map((p) => path.basename(p)).join(", ");
     });
 
@@ -257,7 +257,7 @@ async function main() {
       await court.waitForLoadState("networkidle");
       if ((await court.locator('a:has-text("Upload document")').count()) > 0) throw new Error("court official sees Upload document");
       await court.goto(v2Url);
-      await court.locator('button:has-text("Download certificate")').waitFor({ timeout: 20000 });
+      await court.locator('button:has-text("Download draft integrity record")').waitFor({ timeout: 20000 });
       if ((await court.locator('button:has-text("Create redacted version")').count()) > 0) throw new Error("court official can redact");
       await court.context().close();
       return "no upload or redaction controls";

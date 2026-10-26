@@ -12,7 +12,7 @@ Ground rules (ADR-037, ADR-039):
 **Step 1 (wording and seed data) is done** on branch `feat/veridoc-wording`: "case" reads "agreement" on every screen and in the messages the screens show; roles show as Party, Reviewer, Verifier and Admin; the landing, login, header and verify page no longer name NCRB, police, courts or the old case-file vocabulary; "victim_name" shows as "Person name"; the BNSS deadline badges, alerts and FIR fields are gone from the screens; both seed scripts use the synthetic VeriDoc samples (`prisma/seed-demo.ts` seeds two agreements and three documents from `samples/veridoc/`). Checked by reading the visible text of every page for every role in a browser, and by `e2e-part1.mjs`.
 
 Still to do, in later steps:
-- The certificate PDF still carries the BSA s.63 wording (`certificate.ts`, `certificate-text.ts` and their test); the screens call it "certificate" and the download file is `certificate-v<n>.pdf`. Step 6 replaces it with a receipt.
+- The certificate is now a **draft integrity record** (`certificate.ts`, `certificate-text.ts`): every page says "Draft integrity record. Not a legal certificate. A lawyer must check it before any legal use.", it makes no statutory or admissibility claim, and the screens and the download file (`integrity-record-draft-v<n>.pdf`) use that name. The route keeps its old path and audit actions (`GENERATE_CERTIFICATE`, `DOWNLOAD_CERTIFICATE`). Step 6 may still replace it with a receipt.
 - The BNSS deadline code is unused by the screens but still exists (`lib/bnss-deadline.ts`, `_workspace/deadline.tsx`, the API fields, the `fir_registered_at` and `offence_sections` columns). `scripts/e2e-deadlines.mjs` and `scripts/seed-deadline-cases.mjs` test and seed it and are obsolete.
 - Code comments, the AI service's entity type names and redaction eval fixtures still use the old vocabulary.
 - `docs/digivault-archive/` keeps the original wording.
@@ -55,7 +55,7 @@ Files with the most old wording (counts from the scan): `prisma/seed-demo.ts`, `
 | Remove | Notes |
 |---|---|
 | BNSS s.193(2) deadline feature: `lib/bnss-deadline.ts` and test, `deadline.tsx`, the deadline fields in the case form and API, deadline scripts | The columns `firRegisteredAt` and `offenceSections` stay in the schema, unused. The audit action `UPDATE_CASE_DEADLINE_FIELDS` stays as history |
-| BSA s.63 certificate wording (`certificate-text.ts`, the certificate route's text) | Replaced by a receipt using the same PDF and QR builder with VeriDoc wording. Needs its own test update |
+| BSA s.63 certificate wording (`certificate-text.ts`, the certificate route's text) | Done: reworded as a draft integrity record with a draft line on every page and no statutory claim (see Status). A receipt using the same builder may replace it later |
 | FIR-style eval fixtures and gold files | Replaced by synthetic redaction fixtures. The quality gate baseline must be regenerated deliberately (`eval:gate --update`) |
 | Old demo documents and `public/sample-firs/` | Replaced by the synthetic samples |
 | NCRB, police and court framing in README, `CLAUDE.md`, `AGENTS.md`, the kickoff prompt, `docs/PRD.md`, `docs/ARCHITECTURE.md` | Done in the docs pass. `docs/01`, `04` to `08` and `DEVELOPMENT.md` now live in `docs/digivault-archive/` and keep their DigiVault text as history; see section 6 |

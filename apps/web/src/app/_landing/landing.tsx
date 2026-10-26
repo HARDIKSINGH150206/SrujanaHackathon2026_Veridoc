@@ -774,7 +774,7 @@ function TwoFiles() {
             ["Proof file", "", "Every tile hash and the anchor, in JSON."],
             ["Page PNGs", "", "Lossless, decoded and re-tiled locally."],
             ["Chain lookup", "Amoy", "Root read from the official contract."],
-            ["Certificate", "", "A pre-filled certificate for this version."],
+            ["Draft integrity record", "", "A pre-filled record of this version, not a legal certificate."],
             ["Share links", "", "Only ever serve the redacted version."],
           ].map(([t, badge, d], i) => (
             <div key={t} className={`lp-cap ${i === 0 ? "lp-cap-on" : ""}`}>
@@ -804,7 +804,7 @@ const ACTIONS: { label: string; allowed: boolean[]; stepUp: boolean }[] = [
   { label: "Open agreements and upload", allowed: [true, true, false, false, true], stepUp: false },
   { label: "Confirm redactions", allowed: [true, true, false, false, true], stepUp: true },
   { label: "Read versions and anchors", allowed: [true, true, true, true, true], stepUp: false },
-  { label: "Download proof and certificate", allowed: [true, true, true, true, true], stepUp: true },
+  { label: "Download proof and draft integrity record", allowed: [true, true, true, true, true], stepUp: true },
   { label: "Retry anchoring", allowed: [false, true, false, false, true], stepUp: true },
   { label: "Create and revoke share links", allowed: [false, true, false, false, true], stepUp: false },
 ];
@@ -982,7 +982,7 @@ function Footer() {
             <p className="lp-footer-h">Verification</p>
             <Link href="/verify" className="lp-fi">Verify page</Link>
             <a href="#portal" className="lp-fi">How checks work</a>
-            <span className="lp-fi">Certificate PDF</span>
+            <span className="lp-fi">Draft integrity record</span>
           </div>
           <div>
             <p className="lp-footer-h">Project</p>

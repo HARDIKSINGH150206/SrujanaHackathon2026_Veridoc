@@ -167,4 +167,6 @@ def build_recap(
         "suggestions": suggestions,
         "reply_line": tpl["reply_line"],
         "disclaimer": tpl["disclaimer"],
+        # Set for Hindi: the templates have not been reviewed by a native speaker. The UI shows it, and the saved recap carries it.
+        "draft_notice": tpl.get("draft_notice"),
     }

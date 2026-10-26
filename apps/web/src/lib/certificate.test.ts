@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
 import jsQR from "jsqr";
 import { buildCertificatePdf, type CertificateInput } from "./certificate";
-import { CERTIFICATE_QR_STATEMENT } from "./certificate-text";
+import { CERTIFICATE_DRAFT_LINE, CERTIFICATE_LIMITS, CERTIFICATE_QR_STATEMENT } from "./certificate-text";
 
 // pdfjs in Node: text and embedded images straight from the PDF bytes.
 async function openPdf(bytes: Uint8Array) {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const doc = await pdfjs.getDocument({ data: bytes.slice(), useSystemFonts: false, isEvalSupported: false, verbosity: 0 }).promise;
+  const texts: string[] = [];
+  for (let n = 1; n <= doc.numPages; n++) {
+    texts.push((await (await doc.getPage(n)).getTextContent()).items.map((i) => ("str" in i ? i.str : "")).join("\n"));
+  }
   const page = await doc.getPage(1);
-  const text = (await page.getTextContent()).items.map((i) => ("str" in i ? i.str : "")).join("\n");
+  const text = texts[0];
   const ops = await page.getOperatorList();
   const images: { width: number; height: number; rgba: Uint8ClampedArray }[] = [];
   for (let i = 0; i < ops.fnArray.length; i++) {
@@ -28,7 +32,7 @@ async function openPdf(bytes: Uint8Array) {
     }
     images.push({ width: img.width, height: img.height, rgba });
   }
-  return { pages: doc.numPages, text, images };
+  return { pages: doc.numPages, text, texts, images };
 }
 
 const H = (c: string) => c.repeat(64);
@@ -60,6 +64,42 @@ function input(overrides: Partial<CertificateInput> = {}): CertificateInput {
   };
 }
 
+describe("buildCertificatePdf: draft, not a legal certificate", () => {
+  const squash = (s: string) => s.replace(/\s+/g, " ");
+
+  it("prints the draft line on every page", async () => {
+    const { pages, texts } = await openPdf(await buildCertificatePdf(input()));
+    expect(CERTIFICATE_DRAFT_LINE).toBe("Draft integrity record. Not a legal certificate. A lawyer must check it before any legal use.");
+    expect(texts).toHaveLength(pages);
+    for (const t of texts) expect(squash(t)).toContain(CERTIFICATE_DRAFT_LINE);
+  });
+
+  it("prints it on the not-yet-anchored version too", async () => {
+    const { texts } = await openPdf(await buildCertificatePdf(input({ anchor: null, verifyUrl: null })));
+    for (const t of texts) expect(squash(t)).toContain(CERTIFICATE_DRAFT_LINE);
+  });
+
+  it("says the record is tamper-evident and may support, but does not itself satisfy, any legal requirement", async () => {
+    const { text } = await openPdf(await buildCertificatePdf(input()));
+    const flat = squash(text);
+    expect(flat).toContain(squash(CERTIFICATE_LIMITS));
+    expect(flat).toContain("tamper-evident");
+    expect(flat).toContain("does not itself satisfy, any legal requirement");
+  });
+
+  it("makes no statutory or admissibility claim and never says tamper-proof", async () => {
+    const { text } = await openPdf(await buildCertificatePdf(input()));
+    expect(text).not.toMatch(/Sakshya|Section 63|s\.63|BSA|admissib|tamper-?proof|valid until|legal effect/i);
+  });
+
+  it("is titled as a draft in the PDF metadata", async () => {
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const doc = await pdfjs.getDocument({ data: (await buildCertificatePdf(input())).slice(), isEvalSupported: false, verbosity: 0 }).promise;
+    const meta = (await doc.getMetadata()).info as { Title?: string };
+    expect(meta.Title).toBe("Draft integrity record: CASE-2026-0042 v2");
+  });
+});
+
 describe("buildCertificatePdf", () => {
   it("is one page with every field docs/07 Phase 5 lists, and the QR decodes to the verify URL", async () => {
     const { pages, text, images } = await openPdf(await buildCertificatePdf(input()));
@@ -68,8 +108,8 @@ describe("buildCertificatePdf", () => {
     for (const s of ["CASE-2026-0042", "FIR statement", H("c"), H("f"), `0x${H("7")}`, "50562527, 2026-10-19T10:00:00.000Z", "0x01e7e6f83f55873E906465d3447cB43434D4ee67"]) {
       expect(flat).toContain(s);
     }
-    expect(text).toContain("Part A: officer in charge of the record");
-    expect(text).toContain("Part B: expert");
+    expect(text).toContain("Reviewed by");
+    expect(text).toContain("Checked by a lawyer (before any legal use)");
     expect(flat.replace(/\s+/g, " ")).toContain(CERTIFICATE_QR_STATEMENT);
 
     expect(images).toHaveLength(1);

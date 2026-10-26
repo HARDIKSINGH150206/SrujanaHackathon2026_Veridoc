@@ -81,7 +81,7 @@ async function main() {
   results.certificate_one_page = certRes.ok && pages === 1;
   results.certificate_qr_is_public_verify_url = qrUrl === info.public_verify_url;
   results.certificate_lists_tx_and_block = text.includes(info.anchor.polygon_tx_hash) && /Block\s+\d+, \d{4}-\d\d-\d\dT/.test(text);
-  results.certificate_has_both_signature_blocks = text.includes("Part A: officer") && text.includes("Part B: expert");
+  results.certificate_is_marked_draft_not_legal = text.replace(/\s+/g, " ").includes("Draft integrity record. Not a legal certificate. A lawyer must check it before any legal use.") && !/Sakshya|Section 63/i.test(text);
   console.log(`QR: ${qrUrl}`);
 
   // Bundle, as the officer's "Download verification bundle" button builds it.
@@ -115,7 +115,7 @@ async function main() {
     const verdict = await page.locator(".result-card.vf-ok h2").allInnerTexts();
     const body = await page.locator("body").innerText();
     results.phone_pages_turn_it_verified =
-      verdict.includes("Verified - matches public blockchain record") && body.includes("the scanned certificate describes");
+      verdict.includes("Verified - matches public blockchain record") && body.includes("the scanned record describes");
     results.portal_made_no_api_calls = apiCalls.length === 0;
     await page.waitForTimeout(400); // result card fade-in
     const official = await page.locator(".vf-official").boundingBox();
@@ -142,7 +142,7 @@ async function main() {
     await link.waitFor({ timeout: 30000 });
     results.version_page_shows_link_and_statement =
       (await link.getAttribute("href")) === info.public_verify_url &&
-      (await opage.locator("body").innerText()).includes("Scanning the QR code proves this certificate's commitment is anchored");
+      (await opage.locator("body").innerText()).includes("Scanning the QR code proves this record's commitment is anchored");
     await officer.close();
   } finally {
     await browser.close();

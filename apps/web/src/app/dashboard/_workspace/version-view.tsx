@@ -12,7 +12,7 @@
  * this page polls the version while it is PENDING. Confirm, anchor and
  * certificate require a step-up token (X-StepUp-Token) from useStepUp().
  *   GET  /api/v1/documents/{d}/versions/{v}/proof                    -> verification bundle (only once anchored)
- *   GET  /api/v1/documents/{d}/versions/{v}/certificate              -> pre-filled certificate PDF
+ *   GET  /api/v1/documents/{d}/versions/{v}/certificate              -> draft integrity record PDF (the route keeps its old name)
  *   GET/POST/DELETE /api/v1/documents/{d}/shares[/{shareId}]         -> share links (only if allowed)
  * Suggestion values (entity, confidence, source) are shown exactly as stored.
  * "Upload new version" opens the upload page with ?document=, which sends
@@ -342,7 +342,7 @@ export function WorkspaceVersionView() {
     setMessage(null);
     let headers: Record<string, string> | null;
     try {
-      headers = await stepUpHeaders("generate the certificate");
+      headers = await stepUpHeaders("generate the draft integrity record");
     } catch (err) {
       setMessage({ kind: "error", text: err instanceof Error ? err.message : String(err) });
       return;
@@ -351,10 +351,10 @@ export function WorkspaceVersionView() {
     const res = await apiFetch(`${base}/certificate`, { headers });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      setMessage({ kind: "error", text: body?.message ?? `Could not generate the certificate (${res.status}).` });
+      setMessage({ kind: "error", text: body?.message ?? `Could not generate the draft integrity record (${res.status}).` });
       return;
     }
-    triggerDownload(await res.blob(), `certificate-v${info?.version_no}.pdf`);
+    triggerDownload(await res.blob(), `integrity-record-draft-v${info?.version_no}.pdf`);
   }
 
   return (
@@ -600,10 +600,10 @@ export function WorkspaceVersionView() {
                 <h2 id="wsv-downloads" className="ws-panel-title">Downloads</h2>
                 <div className="wsv-actions">
                   <button type="button" className="ws-secondary" onClick={handleCertificate}>
-                    <Icon name="download" size={18} /> Download certificate
+                    <Icon name="download" size={18} /> Download draft integrity record
                   </button>
                   <p className="ws-row-note" style={{ margin: "-4px 0 4px" }}>
-                    Certificate pre-filled with this version&apos;s record. It is unsigned.
+                    Draft integrity record, pre-filled with this version&apos;s record. It is tamper-evident, not a legal certificate: a lawyer must check it before any legal use.
                     {info.public_verify_url ? (
                       <>
                         {" "}Its QR code opens{" "}

@@ -16,7 +16,7 @@ import { uploadPdfAsEvidence } from "@/lib/client/evidence-upload";
 import { loadDraft, type RecapDraft } from "@/lib/client/recap-draft";
 import { checkReply, echoCode, replyLine, type ReplyCheck } from "@/lib/echo-code";
 import { buildRecapPdf } from "@/lib/recap-pdf";
-import type { RecapLanguage, RecapResponse } from "@/lib/recap";
+import { recapPdfDisclaimer, type RecapLanguage, type RecapResponse } from "@/lib/recap";
 import type { CaseRow } from "./data";
 import { WorkspaceShell } from "./shell";
 
@@ -54,6 +54,7 @@ const RECAP_CSS = `
 .rc-result { margin: 14px 0 0; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line-2); font-size: 14px; }
 .rc-ok { border-color: var(--ok); }
 .rc-bad { border-color: var(--warn); }
+.rc-draft { margin: 20px 0 0; padding: 8px 12px; border: 1px solid var(--warn); border-radius: 8px; color: var(--warn); font-size: 14px; font-weight: 600; }
 .rc-limit { margin: 10px 0 0; color: var(--paper-3); font-size: 13px; max-width: 70ch; }
 .rc-reply { width: 100%; min-height: 90px; font-family: inherit; margin-top: 10px; }
 @media (max-width: 720px) { .rc-code { font-size: 22px; } }
@@ -154,7 +155,7 @@ export function RecapView() {
     try {
       setPhase("Building the recap document…");
       const fontBytes = new Uint8Array(await (await fetch(FONT_URL)).arrayBuffer());
-      const pdf = await buildRecapPdf({ title: recap.title, text: recap.text, disclaimer: recap.disclaimer }, fontBytes);
+      const pdf = await buildRecapPdf({ title: recap.title, text: recap.text, disclaimer: recapPdfDisclaimer(recap) }, fontBytes);
       const up = await uploadPdfAsEvidence(pdf, { caseId, title: title.trim() || "Recap", docType: "RECAP" }, (p) =>
         setPhase(p === "hashing" ? "Fingerprinting the pages in your browser…" : "Uploading. The server is re-checking every fingerprint…")
       );
@@ -271,6 +272,11 @@ export function RecapView() {
 
             {recap && (
               <>
+                {recap.draft_notice && (
+                  <p role="note" className="rc-draft" data-testid="draft-translation">
+                    {recap.draft_notice}
+                  </p>
+                )}
                 <h2 className="rc-h2">The recap</h2>
                 <div className="rc-text" lang={language} aria-label="Recap text">
                   {recap.text}

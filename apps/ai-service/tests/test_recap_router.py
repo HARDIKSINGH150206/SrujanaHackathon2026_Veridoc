@@ -34,6 +34,12 @@ class RecapRouteTests(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertIn("मात्रा: 200", r.json()["text"])
 
+    def test_hindi_carries_the_draft_notice_and_english_does_not(self):
+        hi = self.post({"playbook_id": "supply-order", "language": "hi", "terms": [term("quantity")]}).json()
+        en = self.post({"playbook_id": "supply-order", "language": "en", "terms": [term("quantity")]}).json()
+        self.assertEqual(hi["draft_notice"], "Draft translation. Not reviewed by a native speaker.")
+        self.assertIsNone(en["draft_notice"])
+
     def test_refusals_are_422_with_a_code(self):
         bad = [
             {"playbook_id": "supply-order", "language": "fr", "terms": []},
